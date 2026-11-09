@@ -1,5 +1,5 @@
 -- ACTUALIZACIÓN TAILWIND. Puede repetirse sobre la versión anterior, sin borrar tablas.
--- Instalación nueva: 001_schema.sql y luego este archivo.
+-- Solo para actualizar instalaciones anteriores. En una base nueva basta 001_schema.sql.
 begin;
 create or replace function public.member_role() returns text language sql stable security definer set search_path='' as $$select role from public.profiles where id=auth.uid()$$;
 alter table public.movements add column if not exists unit_cost numeric(14,2) default null;

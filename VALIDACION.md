@@ -22,3 +22,7 @@ Las pruebas de PostgreSQL utilizan PGlite. No se conectan al Supabase del usuari
 Responsive se implementó con navegación móvil, formularios de una columna y grids por breakpoint. Queda pendiente comprobar visualmente en los navegadores y dispositivos del estudiante los casos de docs/PRUEBAS_MANUALES.md.
 
 Para completar todos los entregables todavía hay que configurar/probar Supabase real, publicar GitHub y Vercel, verificar la URL pública y añadir los enlaces y las revisiones del estudiante al README/VIBE_CODING.md. No se afirma que esas publicaciones ya existan.
+
+## Instalador unificado
+
+Se verificó nuevamente la suite completa (35 pruebas aprobadas) usando el nuevo 001 completo en las pruebas de instalación. Las pruebas de actualización cargan el esquema anterior desde tests/fixtures/schema_v1.sql para seguir comprobando que 004 actualiza datos existentes. Una base nueva requiere solo 001; la creación del usuario y la asignación de rol continúan siendo pasos posteriores.

@@ -98,9 +98,9 @@ test("migración V2 conserva datos y protege configuración y pagos", async (t) 
     await db.exec(
       `create role anon;create role authenticated;create schema auth;create table auth.users(id uuid primary key);create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;grant usage on schema auth to authenticated;grant execute on function auth.uid() to authenticated;`,
     );
-    await db.exec(await readFile("supabase/001_schema.sql", "utf8"));
+    await db.exec(await readFile("tests/fixtures/schema_v1.sql", "utf8"));
     await db.exec(
-      `insert into auth.users values('${admin}'),('${reader}'),('${bodega}');insert into public.profiles values('${admin}','admin@finca.local','admin'),('${reader}','lector@finca.local','lectura'),('${bodega}','bodega@finca.local','bodega');`,
+      `insert into auth.users values('${admin}'),('${reader}'),('${bodega}');insert into public.profiles(id,email,role) values('${admin}','admin@finca.local','admin'),('${reader}','lector@finca.local','lectura'),('${bodega}','bodega@finca.local','bodega');`,
     );
     async function as(id: string) {
       await db.exec(

@@ -15,7 +15,7 @@ test("PostgreSQL: migración, permisos y transacciones de inventario", async (t)
     );
     await db.exec(await readFile("supabase/001_schema.sql", "utf8"));
     await db.exec(
-      `insert into auth.users values ('${admin}'),('${reader}'),('${warehouse}'),('${seller}'),('${stranger}');insert into public.profiles values('${admin}','admin@test.local','admin'),('${reader}','read@test.local','lectura'),('${warehouse}','bodega@test.local','bodega'),('${seller}','ventas@test.local','ventas');`,
+      `insert into auth.users values ('${admin}'),('${reader}'),('${warehouse}'),('${seller}'),('${stranger}');insert into public.profiles(id,email,role) values('${admin}','admin@test.local','admin'),('${reader}','read@test.local','lectura'),('${warehouse}','bodega@test.local','bodega'),('${seller}','ventas@test.local','ventas');`,
     );
     async function as(uid: string, role = "authenticated") {
       await db.exec(

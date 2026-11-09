@@ -17,7 +17,7 @@ El ZIP no incluye tu archivo de credenciales. Usa la misma URL base y clave púb
 
 ## Instalación nueva
 
-Ejecuta `001_schema.sql` y después `004_reparacion_tailwind.sql`. Luego crea usuarios en Authentication → Users y asigna sus perfiles siguiendo docs/CONFIGURAR_SUPABASE.md. No ejecutes scripts con correos de ejemplo sin reemplazarlos.
+Ejecuta únicamente `001_schema.sql`: ahora incluye toda la estructura y las funciones de la aplicación. No hace falta ejecutar `004` después. Luego crea usuarios en Authentication → Users y asigna sus perfiles siguiendo docs/CONFIGURAR_SUPABASE.md. No ejecutes scripts con correos de ejemplo sin reemplazarlos.
 
 ## Categorías locales de tu versión anterior
 

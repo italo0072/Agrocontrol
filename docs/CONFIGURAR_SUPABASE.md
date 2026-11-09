@@ -12,7 +12,7 @@ Esta guía corresponde a una empresa y un proyecto Supabase nuevo. No ejecutes l
 
 1. En el panel abre **SQL Editor → New query**.
 2. Abre en VS Code `supabase/001_schema.sql`.
-3. Copia TODO su contenido al editor y ejecútalo una sola vez. Después ejecuta `supabase/004_reparacion_tailwind.sql` completo una sola vez. Si ya tenías la versión adjunta, ejecuta solamente el archivo 003 y consulta ACTUALIZAR.md.
+3. Copia TODO su contenido al editor y ejecútalo una sola vez. El archivo 001 ya incluye las funciones de 004; en una base nueva no ejecutes otro esquema después. Si ya tenías la versión adjunta, ejecuta solamente el archivo 004 y consulta ACTUALIZAR.md.
 4. Comprueba que existen `profiles`, `products`, `partners`, `movements`, `sales`, `categories`, `farm_settings` y `payments`.
 
 La migración se ejecuta en una transacción. Si reporta un error, revisa el mensaje antes de repetir. No incluye comandos para borrar o resetear tablas. Si ya se ejecutó correctamente, no la repitas.

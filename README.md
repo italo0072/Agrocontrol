@@ -47,7 +47,7 @@ En Linux/macOS sustituye `Copy-Item` por `cp`. Si PowerShell bloquea `npm.ps1`, 
 
 ## 2. Datos reales compartidos
 
-Sigue [docs/CONFIGURAR_SUPABASE.md](docs/CONFIGURAR_SUPABASE.md). Debes crear un proyecto Supabase, ejecutar las migraciones incluidas en orden (`001_schema.sql` y `004_reparacion_tailwind.sql`), crear tus usuarios y asignarles un rol. Después configura `.env.local`, reinicia el servidor y sal de la demo para iniciar sesión.
+Sigue [docs/CONFIGURAR_SUPABASE.md](docs/CONFIGURAR_SUPABASE.md). Debes crear un proyecto Supabase, ejecutar únicamente `supabase/001_schema.sql` (instalador completo para una base nueva), crear tus usuarios y asignarles un rol. Después configura `.env.local`, reinicia el servidor y sal de la demo para iniciar sesión.
 
 ```dotenv
 NEXT_PUBLIC_SUPABASE_URL=https://TU_PROYECTO.supabase.co

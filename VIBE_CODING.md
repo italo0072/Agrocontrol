@@ -88,3 +88,7 @@ La migración 004 es incremental y repetible, verifica roles dentro de PostgreSQ
 Se identificó y corrigió un hook del panel que estaba después de un retorno condicional. Los indicadores mensuales se obtienen de SQL completo; los gráficos y resúmenes cargados conservan su límite explícito.
 
 No se probaron el correo ni Supabase real ni se publicaron cuentas del estudiante. Las verificaciones personales, los prompts reales de nuevas iteraciones y las URLs públicas deben completarse por el estudiante.
+
+## Instalador SQL unificado
+
+A petición del usuario, se integró la actualización 004 dentro de 001_schema.sql en una sola transacción para instalaciones nuevas. El archivo 004 se conserva exclusivamente para bases anteriores. Se guardó el esquema antiguo como fixture de pruebas para continuar verificando migraciones reales y se ajustaron las inserciones de perfiles a columnas explícitas. No se borró ni se modificó una base remota.
