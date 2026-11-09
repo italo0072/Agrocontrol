@@ -31,7 +31,7 @@ export async function GET(request: Request) {
     ]);
     if ([p, c, m, s, metrics, cats, farm, pay].some((r) => r.error))
       throw new ApiError(
-        "No se pudieron leer los datos. Ejecuta la actualización 004_reparacion_tailwind.sql si vienes de la versión anterior y verifica tu acceso.",
+        "No se pudieron leer los datos. Verifica tu acceso y que la base tenga el esquema actual indicado en README.md.",
         503,
       );
     if (

@@ -25,7 +25,7 @@ Si ya tienes `.env.local`, consérvalo; no lo reemplaces por el ejemplo vacío.
 ### Proyecto nuevo
 
 1. Crea un proyecto en https://supabase.com.
-2. En SQL Editor ejecuta completo **`supabase/001_schema.sql`**, una sola vez. Incluye toda la estructura de la aplicación; no necesitas ejecutar 004 después.
+2. En SQL Editor ejecuta completo **`supabase/001_schema.sql`**, una sola vez. Es el único instalador del esquema y contiene toda la estructura de la aplicación.
 3. Crea tu usuario en **Authentication → Users**, indicando tu correo y una contraseña. Confirma el correo desde el panel si ofrece esa opción.
 4. Abre **`supabase/002_asignar_usuario_ejemplo.sql`**, reemplaza el correo de ejemplo por el del usuario creado y ejecútalo para asignar `admin`. El script no crea contraseñas.
 5. Completa `.env.local` con la URL base y la clave pública del mismo proyecto:
@@ -39,7 +39,7 @@ No agregues `/rest/v1/` a la URL. No uses service_role ni claves secretas en var
 
 ### Base anterior
 
-Si ya tienes tablas de una versión previa, conserva un respaldo y ejecuta **`supabase/004_reparacion_tailwind.sql`** para actualizarlas. No ejecutes 001 sobre tablas existentes. Si ya aplicaste la actualización, la depuración de archivos de esta entrega no requiere volver a ejecutar SQL.
+Esta distribución contiene un único esquema, `001_schema.sql`, para bases nuevas. Si tu base ya tiene la estructura actual, consérvala: la corrección de React no requiere ejecutar SQL. No ejecutes 001 sobre tablas existentes. Si tu estructura es anterior, conserva tus datos y solicita una migración específica antes de modificarla.
 
 Las categorías que antes se guardaban únicamente en `localStorage` deben recrearse desde Configuración para compartirlas con el equipo. La actualización no borra la clave local anterior.
 
@@ -124,3 +124,15 @@ Moneda USD y horarios de El Salvador. Sin conversiones automáticas de sacos, kg
 La API carga hasta 200 registros recientes de movimientos, ventas y pagos. Los filtros, gráficos y CSV usan ese conjunto; los indicadores mensuales consultan todo el historial SQL. Los catálogos requieren ampliar paginación si llegan a 1,000 registros. Usa Actualizar para traer cambios de otros usuarios. No hay importación automática de Excel, mezclas, varias bodegas ni facturación fiscal.
 
 La demo usa datos ficticios en un solo navegador. Los CSV son consultas, no respaldos completos: configura respaldos de PostgreSQL antes de usar datos operativos.
+
+## Si aparece un aviso de suspensión después de actualizar
+
+Detén `npm run dev`, elimina únicamente la caché `.next`, reinstala con `npm ci` y vuelve a iniciar. En PowerShell:
+
+```powershell
+Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue
+npm ci
+npm run dev
+```
+
+Haz una recarga completa del navegador (Ctrl+Shift+R). No borres `.env.local`, la base ni los datos del navegador para esto. Se separó la navegación de la carga de sesión y se añadieron límites de Suspense; no se capturan ni se silencian sus excepciones. Sin la traza completa del aviso original no se puede confirmar su causa exacta; si persiste, conserva el nombre del componente y la traza de la consola.

@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { Suspense,useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import {
   BarChart3,
@@ -30,21 +30,28 @@ const links = [
   ["/guia", "Guía de uso", BookOpen],
   ["/settings", "Configuración", Settings],
 ] as const;
-export function Shell({ children }: { children: React.ReactNode }) {
-  const store = useStore(),
-    path = usePathname();
-  const [mobileOpen, setMobileOpen] = useState(false);
-  useEffect(() => setMobileOpen(false), [path]);
-  if (!store.ready)
-    return (
-      <p
-        className="flex h-full items-center justify-center text-slate-400"
-        role="status"
-      >
-        Preparando AgroControl…
-      </p>
-    );
-  if (!store.demo && !store.session) return <Auth />;
+function PageLoading(){return <p role="status" className="p-6 text-slate-400">Cargando espacio de trabajo…</p>;}
+
+export function Shell({children}:{children:React.ReactNode}){
+ const store=useStore();
+ const visible=store.ready&&(store.demo||Boolean(store.session));
+ const identity=store.demo?"demo":store.session?.user.id||"guest";
+ return <>
+  {!store.ready?<PageLoading/>:!visible?<Auth/>:null}
+  {/* El árbol de rutas permanece montado durante la carga de sesión.
+      Los datos se protegen también en API y PostgreSQL. Cambiar de usuario
+      remonta el espacio para no conservar formularios de otra cuenta. */}
+  <div hidden={!visible} key={identity}>
+   <Suspense fallback={<PageLoading/>}><Workspace>{children}</Workspace></Suspense>
+  </div>
+ </>;
+}
+
+function Workspace({children}:{children:React.ReactNode}){
+ const store=useStore();
+ const path=usePathname();
+ const [mobileOpen,setMobileOpen]=useState(false);
+ useEffect(()=>setMobileOpen(false),[path]);
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-slate-900">
       <a className="skip" href="#contenido">
@@ -171,25 +178,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
               )}
             </div>
           )}
-          {store.loading && !store.data ? (
-            <p
-              role="status"
-              className="flex h-full items-center justify-center text-slate-400 text-xl"
-            >
-              Cargando información…
-            </p>
-          ) : !store.data ? (
-            <section className="section-card">
-              <h2 className="text-slate-100 font-bold text-xl mb-2">
-                No hay información disponible
-              </h2>
-              <p className="text-slate-400 text-base">
-                Comprueba la configuración y la asignación de tu rol.
-              </p>
-            </section>
-          ) : (
-            children
-          )}
+          {!store.data && <p role="status" className="p-6 text-slate-400">{store.loading?"Cargando información…":"Esperando la información de la sesión."}</p>}
+          <div hidden={!store.data}>
+            <Suspense fallback={<PageLoading/>}>{children}</Suspense>
+          </div>
         </main>
         <footer className="mt-auto px-8 py-5 text-sm text-slate-400 border-t border-slate-700 bg-slate-900/80 flex items-center justify-between shrink-0 backdrop-blur-sm">
           <div className="flex flex-col gap-0.5">

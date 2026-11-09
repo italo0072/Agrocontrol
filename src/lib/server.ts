@@ -30,7 +30,7 @@ export async function authenticate(request: Request) {
     .single();
   if (profileError?.code === "42703")
     throw new ApiError(
-      "Actualiza la base de datos ejecutando supabase/004_reparacion_tailwind.sql.",
+      "La base no tiene la estructura requerida. Consulta la configuración en README.md.",
       503,
     );
   if (profileError || !profile)

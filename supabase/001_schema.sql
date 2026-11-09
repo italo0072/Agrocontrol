@@ -1,7 +1,7 @@
 -- INSTALACIÓN COMPLETA EN UN PROYECTO SUPABASE NUEVO Y VACÍO.
--- Incluye las funciones de 004: categorías, perfiles, finca, costos y pagos.
--- Ejecutar este archivo una sola vez. No hace falta ejecutar 004 después.
--- En una base anterior con tablas existentes, usa 004 en lugar de este archivo.
+-- Incluye categorías, perfiles, finca, costos, inventario, ventas y pagos.
+-- Ejecutar este archivo una sola vez en una base nueva y vacía.
+-- No ejecutar sobre tablas existentes. Conserva tus datos y solicita una migración si tu estructura es anterior.
 begin;
 
 -- Estructura y reglas base

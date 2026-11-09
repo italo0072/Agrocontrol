@@ -98,3 +98,7 @@ A petición del usuario, se integró la actualización 004 dentro de 001_schema.
 ## Depuración de la entrega
 
 A solicitud del usuario se retiraron pruebas, fixtures, guías separadas, plantillas no utilizadas, diagnósticos, instrucciones auxiliares de agentes, el bundle Git redundante y las dependencias de pruebas/formato. Se consolidaron instalación, configuración, publicación y validación manual en README.md. Se conservaron .git por el requisito de historial, .env.example, VIBE_CODING.md, configuraciones de compilación y SQL de instalación/actualización. Las pruebas retiradas siguen disponibles en commits anteriores. No se alteraron funcionalidades ni reglas de la base.
+
+## Aviso de suspensión y esquema único
+
+Se retiró el SQL de actualización separado, como solicitó el usuario; el único esquema distribuido es 001 y 002 solo asigna el rol de un usuario existente. Se separó la lectura de navegación de las ramas de inicialización/autenticación, se mantuvo montado el árbol de rutas y se añadieron límites Suspense. Cambiar de identidad remonta el espacio para no conservar formularios de otro usuario. No se ocultó el aviso ni se modificaron dependencias sin evidencia. La causa exacta del aviso original no se confirmó sin su traza de componentes; se documentó el reinicio limpio de desarrollo y la verificación pendiente en el navegador del usuario.
