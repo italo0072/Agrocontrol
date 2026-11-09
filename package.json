@@ -1,14 +1,12 @@
 {
   "name": "agrocontrol",
   "version": "2.1.0",
-  "description": "Gesti\u00f3n de finca cafetalera con Tailwind, inventario, costos, categor\u00edas y pagos",
+  "description": "Gestión de finca cafetalera con Tailwind, inventario, costos, categorías y pagos",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit",
-    "test": "node --import tsx --test tests/*.test.ts",
-    "format": "prettier --write src tests"
+    "typecheck": "tsc --noEmit"
   },
   "keywords": [],
   "author": "",
@@ -22,15 +20,12 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "^0.5.15",
     "@types/node": "^26.6.6",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "autoprefixer": "^10.4.19",
     "postcss": "^8.4.38",
-    "prettier": "^3.9.10",
     "tailwindcss": "^3.4.17",
-    "tsx": "^4.23.15",
     "typescript": "^7.0.2"
   },
   "private": true,

@@ -1,3 +1,5 @@
+> Este documento conserva el historial real de desarrollo. Algunas rutas y herramientas mencionadas en iteraciones pasadas fueron retiradas de la distribución depurada; las instrucciones vigentes están en README.md.
+
 # Proceso de Vibe Coding · AgroControl
 
 ## Solicitud y concepción
@@ -92,3 +94,7 @@ No se probaron el correo ni Supabase real ni se publicaron cuentas del estudiant
 ## Instalador SQL unificado
 
 A petición del usuario, se integró la actualización 004 dentro de 001_schema.sql en una sola transacción para instalaciones nuevas. El archivo 004 se conserva exclusivamente para bases anteriores. Se guardó el esquema antiguo como fixture de pruebas para continuar verificando migraciones reales y se ajustaron las inserciones de perfiles a columnas explícitas. No se borró ni se modificó una base remota.
+
+## Depuración de la entrega
+
+A solicitud del usuario se retiraron pruebas, fixtures, guías separadas, plantillas no utilizadas, diagnósticos, instrucciones auxiliares de agentes, el bundle Git redundante y las dependencias de pruebas/formato. Se consolidaron instalación, configuración, publicación y validación manual en README.md. Se conservaron .git por el requisito de historial, .env.example, VIBE_CODING.md, configuraciones de compilación y SQL de instalación/actualización. Las pruebas retiradas siguen disponibles en commits anteriores. No se alteraron funcionalidades ni reglas de la base.

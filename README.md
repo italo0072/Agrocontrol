@@ -1,137 +1,102 @@
-# AgroControl
+# AgroControl · Finca cafetalera
 
-Aplicación web para estandarizar productos, recepciones, inventario, ventas y registros de pagos de una finca cafetalera. Proyecto académico funcional con Next.js 16.4.5, App Router, TypeScript, React, Tailwind CSS y Supabase (Auth + PostgreSQL).
+Aplicación con **Next.js 16, App Router, TypeScript, React, Tailwind CSS y Supabase** para gestionar productos, categorías, recepciones, inventario, contactos, ventas y registros de pagos.
 
-**Repositorio público:** pendiente de crear desde tu cuenta.
+**Repositorio público:** pendiente de agregar tu URL real de GitHub.
 
-**Aplicación en producción:** pendiente de desplegar y agregar la URL real.
+**Aplicación publicada:** pendiente de agregar tu URL real de producción.
 
-## Actualizar desde tu versión adjunta
+## Ejecutar en Windows
 
-Lee primero [ACTUALIZAR.md](ACTUALIZAR.md). **Si ya creaste la base de datos, ejecuta solamente `supabase/004_reparacion_tailwind.sql`, una vez. No vuelvas a ejecutar `001_schema.sql`.** Conserva tu `.env.local` y el historial Git de tu repositorio.
-
-Esta actualización corrige los números que volvían a cero, agrega Configuración (categorías, perfil, contraseña y finca), productores, unidades de café y registros de pagos. Incluye un diseño renovado con la misma estructura de navegación y módulos.
-
-## Qué incluye
-
-- Inicio de sesión por correo y contraseña y recuperación de contraseña.
-- Perfiles de administrador, ventas, bodega y lectura, controlados en la base de datos.
-- Productos con código único, categoría, presentación, unidad, precio, mínimo y estado activo/inactivo.
-- Clientes, proveedores y productores con edición y desactivación.
-- Configuración: categorías dinámicas, nombre/teléfono del usuario, cambio de contraseña y datos de la finca.
-- Registro de pagos realizados a contactos, con referencia, concepto, responsable, fecha y anulación auditada.
-- Entradas y salidas de inventario con cantidad, motivo, proveedor opcional y responsable.
-- Ventas con varios productos, total calculado por el servidor y descuento de stock en una sola transacción.
-- Anulación con motivo, devolución de stock y conservación del historial.
-- Resumen mensual, alertas de stock bajo, gráfico semanal y movimientos recientes.
-- Reportes con fechas y exportación CSV de existencias, ventas y movimientos.
-- Demo independiente con datos ficticios para explorar sin configurar cuentas.
-
-## 1. Ejecutar en Windows
-
-Instala **Node.js 24 LTS** desde https://nodejs.org. Reinicia PowerShell o VS Code después de instalar. Instala Git para publicar el repositorio.
-
-Extrae todo el ZIP, abre `agrocontrol` en VS Code y selecciona Terminal → Nueva terminal. Debes ver `package.json` al ejecutar `Get-ChildItem`; no ejecutes los comandos dentro de `src`.
+Instala Node.js 24 LTS desde https://nodejs.org y Git para publicar el repositorio. Extrae el ZIP completo, abre la carpeta `agrocontrol` en VS Code y abre una terminal donde está `package.json`.
 
 ```powershell
-node --version
-npm --version
 npm ci
 Copy-Item .env.example .env.local
 npm run dev
 ```
 
-Abre http://localhost:3000 y selecciona **Abrir demostración**. Mantén la terminal abierta. Detén el servidor con Ctrl+C.
+Abre http://localhost:3000. Puedes usar **Abrir demostración** sin configurar Supabase. Detén el servidor con Ctrl+C. Si PowerShell bloquea npm.ps1, usa `npm.cmd` en lugar de `npm`. En Linux/macOS usa `cp` en lugar de `Copy-Item`.
 
-En Linux/macOS sustituye `Copy-Item` por `cp`. Si PowerShell bloquea `npm.ps1`, usa `npm.cmd ci` y `npm.cmd run dev`. No necesitas cambiar las políticas del equipo.
+Si ya tienes `.env.local`, consérvalo; no lo reemplaces por el ejemplo vacío.
 
-## 2. Datos reales compartidos
+## Configurar Supabase
 
-Sigue [docs/CONFIGURAR_SUPABASE.md](docs/CONFIGURAR_SUPABASE.md). Debes crear un proyecto Supabase, ejecutar únicamente `supabase/001_schema.sql` (instalador completo para una base nueva), crear tus usuarios y asignarles un rol. Después configura `.env.local`, reinicia el servidor y sal de la demo para iniciar sesión.
+### Proyecto nuevo
+
+1. Crea un proyecto en https://supabase.com.
+2. En SQL Editor ejecuta completo **`supabase/001_schema.sql`**, una sola vez. Incluye toda la estructura de la aplicación; no necesitas ejecutar 004 después.
+3. Crea tu usuario en **Authentication → Users**, indicando tu correo y una contraseña. Confirma el correo desde el panel si ofrece esa opción.
+4. Abre **`supabase/002_asignar_usuario_ejemplo.sql`**, reemplaza el correo de ejemplo por el del usuario creado y ejecútalo para asignar `admin`. El script no crea contraseñas.
+5. Completa `.env.local` con la URL base y la clave pública del mismo proyecto:
 
 ```dotenv
 NEXT_PUBLIC_SUPABASE_URL=https://TU_PROYECTO.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=TU_CLAVE_PUBLISHABLE_O_ANON
+NEXT_PUBLIC_SUPABASE_ANON_KEY=TU_CLAVE_PUBLICA_PUBLISHABLE_O_ANON
 ```
 
-Estas variables son públicas por diseño: la seguridad depende de Auth, permisos y RLS. **No uses claves secretas ni service_role.** Nunca subas `.env.local` a GitHub. Si en una evolución agregas secretos del servidor, usa variables sin prefijo `NEXT_PUBLIC_`.
+No agregues `/rest/v1/` a la URL. No uses service_role ni claves secretas en variables `NEXT_PUBLIC_`. `.env.local` está excluido de Git. Reinicia el servidor después de modificarlo, sal de la demo e inicia sesión con tu usuario.
 
-Una empresa por proyecto Supabase. Los usuarios autorizados de esa empresa comparten los datos. No es una plataforma multiempresa.
+### Base anterior
 
-## 3. Flujo inicial recomendado
+Si ya tienes tablas de una versión previa, conserva un respaldo y ejecuta **`supabase/004_reparacion_tailwind.sql`** para actualizarlas. No ejecutes 001 sobre tablas existentes. Si ya aplicaste la actualización, la depuración de archivos de esta entrega no requiere volver a ejecutar SQL.
 
-1. Administración registra productos; las categorías se administran desde Configuración y cada presentación debe tener su código y unidad.
-2. Ventas o administración registra clientes, proveedores y productores.
-3. Bodega registra saldos iniciales como entradas con referencia y motivo.
-4. Ventas crea una venta seleccionando el cliente y los productos.
-5. El sistema descuenta stock y registra movimientos con responsable.
-6. Si hubo error, anula la venta e indica el motivo. No registres además una entrada manual por la misma anulación.
-7. Registra pagos que ya realizaste, indicando el beneficiario y el comprobante.
-8. Consulta indicadores y exporta CSV.
+Las categorías que antes se guardaban únicamente en `localStorage` deben recrearse desde Configuración para compartirlas con el equipo. La actualización no borra la clave local anterior.
 
-La demostración permite este mismo recorrido, pero guarda datos ficticios localmente. Restablecer demo elimina únicamente esos datos locales. Los pagos son registros manuales: no se ejecuta ninguna transferencia ni se generan saldos por pagar. No hay importación automática de Excel ni traslado automático de la demo a Supabase.
+### Usuarios y permisos
 
-## 4. Arquitectura
+Crea cada usuario en Authentication y asígnale su perfil con el mismo procedimiento del archivo 002, cambiando el correo y el rol:
 
-| Capa              | Implementación                                                        |
-| ----------------- | --------------------------------------------------------------------- |
-| Páginas y layout  | Server Components de App Router                                       |
-| Interacción       | Client Components con `useState`, `useEffect`, contexto y formularios |
-| Estilos           | `globals.css`, `tailwind.config.js` y PostCSS                         |
-| API               | `GET /api/data` y `POST /api/commands` mediante fetch                 |
-| Validación        | Zod en Route Handler, restricciones y reglas en PostgreSQL            |
-| Identidad         | Supabase Auth; verificación `getUser` en el servidor                  |
-| Autorización      | Perfiles, RLS y funciones que vuelven a comprobar el rol              |
-| Persistencia real | PostgreSQL de Supabase                                                |
-| Persistencia demo | Adaptador local en `localStorage`                                     |
-| Pruebas           | Node Test Runner, TypeScript y PostgreSQL embebido PGlite             |
+| Rol | Permisos |
+|---|---|
+| admin | Catálogos, categorías, finca y todas las operaciones |
+| ventas | Contactos, ventas, registros de pagos y sus anulaciones |
+| bodega | Entradas y salidas manuales |
+| lectura | Consultas y exportaciones |
 
-```mermaid
-flowchart TD
-    A["Páginas App Router"] --> B["Componentes interactivos"]
-    B --> C["Route Handlers"]
-    C --> D["Supabase Auth"]
-    C --> E["PostgreSQL y RLS"]
-    E --> F["Funciones transaccionales"]
-    B --> G["Adaptador de demostración"]
-```
+Cada usuario puede editar su nombre/teléfono y cambiar su propia contraseña. El formulario no permite elevar roles. Todos los usuarios autorizados pertenecen a una misma finca por proyecto Supabase.
 
-Las páginas no exponen datos del negocio en HTML estático. El cliente solicita la información a la API autenticada. Los Server Components aportan estructura, composición y metadatos; las consultas operativas se hacen desde Client Components a los handlers.
+Para recuperación de contraseña permite `http://localhost:3000/recuperar` y después la URL exacta de producción en Authentication → URL Configuration. La entrega de correos depende de la configuración de Auth/SMTP de Supabase.
 
-### Rutas
+## Uso
 
-`/`, `/productos`, `/inventario`, `/contactos`, `/ventas`, `/reportes`, `/pagos`, `/settings`, `/guia`, `/recuperar`, además de dos rutas API. La pantalla de acceso se muestra cuando no hay sesión ni demo. La protección efectiva de datos y operaciones está en la API y PostgreSQL, no solo en ocultar botones.
+1. Configura categorías y registra productos con código, presentación y unidad.
+2. Registra clientes, proveedores y productores.
+3. Ingresa saldos o recepciones con cantidad, motivo y costo opcional.
+4. Registra ventas: el servidor valida y descuenta existencias en una transacción.
+5. Anula ventas incorrectas con motivo para devolver el stock conservando el historial.
+6. Registra pagos ya realizados a contactos con fecha y comprobante.
+7. Filtra y exporta reportes CSV.
 
-### Reglas de inventario
+No se permiten existencias negativas. Los reintentos con el mismo identificador no duplican ventas, entradas ni pagos. Las categorías se administran en Supabase; renombrarlas actualiza sus productos. Las cantidades y promedios de compras se agrupan por producto/unidad.
 
-- No se permiten existencias negativas.
-- Una venta completa se confirma o revierte en una sola transacción.
-- Bloqueos de filas protegen la actualización del stock. Los productos se bloquean en orden consistente.
-- Identificadores de operación únicos evitan duplicar entradas o ventas al reintentar una misma solicitud.
-- Una venta solo se puede anular una vez.
-- No se pueden cambiar unidades después de registrar movimientos.
-- Los precios y unidades de cada venta quedan como instantánea en su detalle.
-- Productos/contactos se desactivan; ventas se anulan. No se borran movimientos desde la aplicación.
+## Arquitectura y requisitos
 
-## 5. Verificar el proyecto
+- **Server Components:** layout y páginas App Router.
+- **Client Components:** sesión, formularios, filtros y panel, con `useState` y `useEffect`.
+- **API consumida por fetch:** `GET /api/data` y `POST /api/commands` mediante Route Handlers.
+- **Persistencia:** Supabase Auth y PostgreSQL con RLS, permisos y funciones transaccionales.
+- **Diseño:** Tailwind, menú móvil, formularios por breakpoint y tablas desplazables.
+- **Carga y errores:** loading.tsx, error.tsx y estados de peticiones/formularios.
+- **Rutas:** `/`, `/productos`, `/inventario`, `/contactos`, `/ventas`, `/pagos`, `/reportes`, `/settings`, `/guia` y `/recuperar`.
+
+## Comprobar y generar producción
 
 ```powershell
-npm test
 npm run typecheck
 npm run build
 npm start
 ```
 
-`npm start` necesita el build previo. `npm test` utiliza PostgreSQL embebido y no requiere tus credenciales ni toca la base de Supabase. Prueba migración, permisos, RLS, transacciones, idempotencia, anulaciones y validación. PGlite no sustituye una prueba de concurrencia ni una prueba de integración contra tu proyecto real.
+Se ejecutaron 35 pruebas automatizadas antes de retirar la infraestructura de pruebas de esta distribución depurada. El historial Git conserva esas pruebas y sus iteraciones. Esta versión mantiene las verificaciones de TypeScript y compilación. Los cambios de esta depuración no modifican las reglas del negocio ni el esquema SQL.
 
-Para revisar la UI y la configuración real sigue [docs/PRUEBAS_MANUALES.md](docs/PRUEBAS_MANUALES.md). Los resultados ejecutados se registran en `VALIDACION.md`.
+Antes de entregar comprueba en navegador: crear producto y categoría, entrada con costo, venta, sobreventa rechazada, anulación, perfil, pago y exportación. Prueba el menú y los formularios a 375, 768 y 1366 px y verifica los permisos con usuarios reales. Las pruebas anteriores no sustituyen esa validación de Supabase y producción.
 
-## 6. Publicar en GitHub conservando commits
+## Publicar en GitHub
 
-El ZIP incluye `.git` y `historial-desarrollo.bundle`. Los commits fueron hechos por el asistente durante la implementación; agrega tus revisiones reales. El bundle sirve si tu descompresor omite carpetas ocultas.
+El ZIP conserva `.git`, necesario para mantener los commits del proceso. Extráelo completo; si ya tienes un repositorio propio, conserva su `.git` y `.env.local` y actualiza solo los archivos de la aplicación.
 
-1. Crea un repositorio **público y vacío** en https://github.com/new. No agregues README, gitignore ni licencia desde GitHub.
-2. En la carpeta del proyecto:
+Crea un repositorio público vacío en https://github.com/new, sin README ni gitignore inicial. Desde esta carpeta:
 
 ```powershell
 git log --oneline
@@ -140,79 +105,22 @@ git remote add origin https://github.com/TU_USUARIO/agrocontrol.git
 git push -u origin main
 ```
 
-Si no aparece el historial, recupéralo en una carpeta nueva:
+Si tu repositorio ya tiene origin, conserva el remoto correcto en lugar de volver a agregarlo. Registra tus revisiones reales con commits descriptivos y completa `VIBE_CODING.md`.
 
-```powershell
-git clone .\historial-desarrollo.bundle ..\agrocontrol-git
-cd ..\agrocontrol-git
-git remote remove origin
-git remote add origin https://github.com/TU_USUARIO/agrocontrol.git
-git push -u origin main
-```
+## Desplegar en Vercel
 
-Para registrar tus mejoras, después de probarlas:
+1. Inicia sesión en https://vercel.com e importa el repositorio de GitHub.
+2. Framework Next.js; raíz donde está package.json; Node.js 24.x; build `npm run build`. No uses exportación estática, porque hay Route Handlers.
+3. Agrega las dos variables de `.env.example` en Environment Variables. No subas `.env.local`.
+4. Despliega, configura la URL en Supabase Auth y prueba el flujo completo.
+5. Sustituye los campos pendientes al inicio de este README por tus URLs reales y publica el commit.
 
-```powershell
-git add .
-git commit -m "feat: describir mi mejora concreta"
-git push
-```
+La URL pública y el repositorio todavía requieren publicación desde tus cuentas. La comprobación visual, Auth real y despliegue no se presentan como completados. Vercel no sustituye una actividad distinta que exija AWS.
 
-El bundle no incluye dependencias: en un clon nuevo ejecuta `npm ci` y copia `.env.example` a `.env.local`.
+## Alcance
 
-## 7. Desplegar en Vercel
+Moneda USD y horarios de El Salvador. Sin conversiones automáticas de sacos, kg, quintales o litros. Costo comercial no equivale a costo contable o utilidad. Pagos registra egresos ya realizados: no ejecuta transferencias, genera deudas ni concilia facturas automáticamente.
 
-1. Configura y prueba Supabase localmente siguiendo la guía y ejecuta la migración V2 si usabas la versión adjunta.
-2. Sube el código a tu GitHub público.
-3. En https://vercel.com inicia sesión con GitHub e importa el repositorio.
-4. Framework: Next.js. Root Directory: donde está `package.json`. Build: `npm run build`. Node.js: 24.x. No uses exportación estática: necesitas Route Handlers.
-5. Agrega las dos variables de `.env.example` en Environment Variables para Production. No adjuntes `.env.local` al repositorio.
-6. Pulsa Deploy. Configura después la URL real en Supabase Authentication → URL Configuration, según la guía.
-7. Prueba la URL pública: acceso, lectura, entrada, venta, anulación y permisos. La URL será pública, pero los datos reales requerirán inicio de sesión.
-8. Sustituye los dos campos pendientes al inicio de este README por las URLs reales de GitHub y Vercel. Confirma y publica el cambio.
+La API carga hasta 200 registros recientes de movimientos, ventas y pagos. Los filtros, gráficos y CSV usan ese conjunto; los indicadores mensuales consultan todo el historial SQL. Los catálogos requieren ampliar paginación si llegan a 1,000 registros. Usa Actualizar para traer cambios de otros usuarios. No hay importación automática de Excel, mezclas, varias bodegas ni facturación fiscal.
 
-No se ha creado ni publicado un repositorio en tu cuenta. No se inventa una URL de producción. Esos entregables requieren completar estos pasos con tus cuentas. Esta publicación en Vercel no sustituye la otra actividad que exige AWS.
-
-## 8. Alcance y límites
-
-- Es una aplicación académica para una finca cafetalera con recepción de café e insumos y operaciones comerciales. No incluye producción, recetas de mezcla, lotes, vencimientos, varias bodegas, cuentas por pagar automáticas, facturación fiscal ni contabilidad.
-- Moneda USD. Fechas mostradas en America/El_Salvador. Cantidades hasta 3 decimales; precios hasta 2. No hay impuestos ni descuentos.
-- El precio se expresa por la unidad de inventario. “Saco de 50 kg” se cuenta en sacos: no se convierte automáticamente a kg.
-- El valor comercial es stock × precio de venta; no es costo contable ni utilidad.
-- La UI carga hasta 200 movimientos, 200 ventas y 200 pagos recientes. Los reportes y el gráfico usan ese conjunto; el total mensual consulta todo el historial en SQL. Los CSV no son un respaldo integral.
-- El catálogo admite menos de 1,000 productos y menos de 1,000 contactos y menos de 1,000 categorías en esta versión. Si alcanza ese límite, se muestra un error explícito y debe ampliarse la paginación.
-- No hay actualización en tiempo real. Usa Actualizar para traer cambios de otros usuarios.
-- Los datos existentes de una demo V1 se amplían sin borrar sus registros; Restablecer demo sí los reemplaza con ejemplos nuevos de finca. La demo se guarda en un solo navegador y no garantiza coordinación entre pestañas. No uses datos reales en ella.
-- Sin las hojas reales de la empresa, no se ha realizado mapeo ni migración. `plantillas/catalogo_productos.csv` es una referencia de estandarización, no un archivo de importación implementada.
-- Antes de usarla en operación real deben validarse los procesos, respaldos, necesidades de trazabilidad y la integración en el proyecto Supabase de la empresa.
-
-## Problemas frecuentes
-
-| Problema                                  | Solución                                                                               |
-| ----------------------------------------- | -------------------------------------------------------------------------------------- |
-| `npm` no se reconoce                      | Instala Node.js y abre otra terminal                                                   |
-| Falta `package.json`                      | Entra a la carpeta agrocontrol, no a src                                               |
-| Puerto 3000 ocupado                       | `npm run dev -- --port 3001` y abre ese puerto                                         |
-| Usuario sin acceso                        | Asigna el perfil mediante SQL; crear el usuario no asigna rol automáticamente          |
-| No puede leer datos                       | Verifica variables, migración y perfil; reinicia el servidor tras cambiar `.env.local` |
-| Cambié variables y no se refleja          | Reinicia `npm run dev`; en Vercel realiza un nuevo despliegue                          |
-| Recuperación no llega                     | Revisa URL permitida, configuración de correo de Supabase y carpeta de spam            |
-| Falla la actualización después de guardar | Pulsa Actualizar y comprueba el historial antes de repetir la operación                |
-
-## Documentación
-
-- `docs/CONFIGURAR_SUPABASE.md`: base, usuarios y variables.
-- `docs/REQUISITOS_TAREA.md`: correspondencia con el enunciado.
-- `docs/PRUEBAS_MANUALES.md`: recorrido de validación.
-- `VIBE_CODING.md`: decisiones, iteraciones y registro honesto de IA.
-- `VALIDACION.md`: verificaciones ejecutadas y pendientes.
-
-Fuentes técnicas: https://nextjs.org/docs/app · https://supabase.com/docs/guides/database/postgres/row-level-security · https://supabase.com/docs/reference/javascript/auth-getuser · https://vercel.com/docs/frameworks/full-stack/nextjs
-
-## Reparaciones específicas de tu ZIP
-
-Se conserva el costo unitario de compras y tu diseño Tailwind. La migración 004 añade/valida `unit_cost` sin recrear la base. La API valida centavos y PostgreSQL vuelve a validarlos. Se reemplazaron los totales de unidades incompatibles por grupos por producto/unidad; el importe monetario puede consolidarse. Los resúmenes de reportes respetan el rango seleccionado.
-
-El ZIP excluye node_modules, .next, archivos locales de entorno y diagnósticos. Incluye código, lockfile, documentación, pruebas y un historial Git recuperable mediante bundle.
-
-La cuenta de Supabase y las publicaciones GitHub/Vercel requieren tus acciones. No se afirma que exista un repositorio público ni una URL de producción antes de completar los pasos y reemplazar los enlaces pendientes.
+La demo usa datos ficticios en un solo navegador. Los CSV son consultas, no respaldos completos: configura respaldos de PostgreSQL antes de usar datos operativos.
