@@ -1,5 +1,4 @@
 import { Heading } from "@/components/shared";
-import s from "@/components/ui.module.css";
 export const metadata = { title: "Guía de uso" };
 export default function Page() {
   return (
@@ -9,7 +8,7 @@ export default function Page() {
         title="Guía de operación"
         description="Un flujo simple para mantener información confiable."
       />
-      <div className={s.guide}>
+      <div className="grid gap-5 md:grid-cols-2">
         {[
           [
             "01 · Configura el catálogo",
@@ -44,9 +43,9 @@ export default function Page() {
             "Administrador: catálogos y operaciones. Ventas: contactos, ventas y anulaciones. Bodega: movimientos. Lectura: consultas. Todos ven los datos de una sola empresa.",
           ],
         ].map(([title, body]) => (
-          <section className={`${s.card} ${s.cardPad}`} key={title}>
-            <h2>{title}</h2>
-            <p>{body}</p>
+          <section className="section-card p-6" key={title}>
+            <h2 className="text-sm font-bold text-slate-100 mb-2">{title}</h2>
+            <p className="text-sm text-slate-400">{body}</p>
           </section>
         ))}
       </div>

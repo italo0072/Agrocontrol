@@ -89,6 +89,7 @@ export function seed(): Snapshot {
       sale_id: null,
       request_id: null,
       partner_id: null,
+      unit_cost: null,
     })),
     sales: [],
   };
@@ -113,6 +114,7 @@ export function applyDemo(previous: Snapshot, input: Command): Snapshot {
     sale_id: string | null = null,
     request_id: string | null = null,
     partner_id: string | null = null,
+    unit_cost: number | null = null,
   ) =>
     s.movements.unshift({
       id: crypto.randomUUID(),
@@ -123,6 +125,7 @@ export function applyDemo(previous: Snapshot, input: Command): Snapshot {
       sale_id,
       request_id,
       partner_id,
+      unit_cost,
       actor: "Demo",
       created_at: now,
     });
@@ -182,6 +185,7 @@ export function applyDemo(previous: Snapshot, input: Command): Snapshot {
       null,
       command.request_id,
       command.partner_id || null,
+      command.unit_cost ?? null,
     );
   }
   if (command.type === "sale") {

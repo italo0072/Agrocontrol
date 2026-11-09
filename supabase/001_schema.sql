@@ -40,7 +40,8 @@ create table public.movements (
  kind text not null check(kind in ('entrada','salida','venta','anulación')),
  reason text not null check(length(trim(reason)) between 1 and 250),actor text not null,
  created_at timestamptz not null default now(),sale_id uuid references public.sales,
- request_id uuid unique,partner_id uuid references public.partners
+ request_id uuid unique,partner_id uuid references public.partners,
+ unit_cost numeric(14,2) default null check(unit_cost>=0)
 );
 create index on public.movements(product_id,created_at desc);
 create index on public.movements(created_at desc);
@@ -73,7 +74,7 @@ create function public.execute_command(p_command jsonb) returns uuid language pl
 declare
  r text; actor_email text; typ text; d jsonb; pid uuid; cid uuid; sid uuid; req uuid;
  p public.products%rowtype; c public.partners%rowtype; sale_row public.sales%rowtype;
- q numeric; price_value numeric; minimum_value numeric; direction_value text; reason_value text; total_value numeric:=0;
+ q numeric; price_value numeric; minimum_value numeric; direction_value text; reason_value text; total_value numeric:=0; uc numeric;
  item jsonb; items_value jsonb:='[]'::jsonb; active_value boolean; found_id uuid;
 begin
  r:=public.member_role(); if r is null then raise exception 'Acceso denegado.'; end if;
@@ -111,10 +112,11 @@ begin
   cid:=nullif(p_command->>'partner_id','')::uuid;
   if cid is not null and not exists(select 1 from public.partners where id=cid and kind='proveedor' and active) then raise exception 'Proveedor inválido.';end if;
   select * into p from public.products where id=pid for update;if not found or not p.active then raise exception 'Producto inexistente o inactivo.';end if;
+  uc:=nullif(p_command->>'unit_cost','')::numeric;if uc is not null and (uc<0 or uc<>round(uc,2)) then raise exception 'Costo unitario inválido.';end if;
   if direction_value='salida' then q:=-q;end if;
   if p.stock+q<0 then raise exception 'Existencia insuficiente.';end if;
   update public.products set stock=stock+q where id=pid;
-  insert into public.movements(product_id,quantity,kind,reason,actor,request_id,partner_id) values(pid,q,direction_value,reason_value,actor_email,req,cid) returning id into found_id;return found_id;
+  insert into public.movements(product_id,quantity,kind,reason,actor,request_id,partner_id,unit_cost) values(pid,q,direction_value,reason_value,actor_email,req,cid,uc) returning id into found_id;return found_id;
  elsif typ='sale' then
   if r not in ('admin','ventas') then raise exception 'Tu rol no permite registrar ventas.';end if;
   req:=(p_command->>'request_id')::uuid;if req is null then raise exception 'Falta identificador de operación.';end if;

@@ -4,7 +4,6 @@ import { Download } from "lucide-react";
 import { csv } from "@/lib/domain";
 import { useStore } from "./provider";
 import { Heading, download, money, quantity, date, Empty } from "./shared";
-import s from "./ui.module.css";
 function localDay(d: string) {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/El_Salvador",
@@ -28,6 +27,21 @@ export function Reports() {
     net = sales
       .filter((x) => x.status === "vigente")
       .reduce((sum, x) => sum + x.total, 0);
+  const purchaseMovements = data.movements.filter(
+    (x) => x.kind === "entrada" && x.unit_cost != null && x.unit_cost > 0,
+  );
+  const purchaseSpend = purchaseMovements.reduce(
+    (sum, x) => sum + x.quantity * (x.unit_cost || 0),
+    0,
+  );
+  const purchaseQty = purchaseMovements.reduce(
+    (sum, x) => sum + x.quantity,
+    0,
+  );
+  const purchaseUnit = purchaseMovements.length > 0
+    ? data.products.find((p) => p.id === purchaseMovements[0].product_id)?.unit
+    : "";
+  const avgCost = purchaseQty > 0 ? purchaseSpend / purchaseQty : 0;
   function stockExport() {
     if (!data) return;
     download(
@@ -127,31 +141,33 @@ export function Reports() {
         title="Reportes y exportaciones"
         description="Consulta y exporta información con columnas y unidades consistentes."
       />
-      <div className={s.notice}>
+      <p className="notice-info text-sm mb-7">
         Ventas y movimientos: hasta los 200 registros más recientes de cada
         tipo. Los filtros y CSV se aplican a esos registros, no a todo el
         historial. Existencias exporta el catálogo cargado. Para un cierre
         histórico completo, consulta la base de datos.
-      </div>
-      <div className={s.toolbar}>
-        <label>
-          Desde
+      </p>
+      <div className="flex items-end gap-4 flex-wrap mb-7">
+        <label className="flex-1 min-w-[200px] max-w-[440px] flex flex-col gap-2">
+          <span className="text-xs text-slate-500">Desde</span>
           <input
             type="date"
+            className="input-pro"
             value={from}
             onChange={(e) => setFrom(e.target.value)}
           />
         </label>
-        <label>
-          Hasta
+        <label className="flex-1 min-w-[200px] max-w-[440px] flex flex-col gap-2">
+          <span className="text-xs text-slate-500">Hasta</span>
           <input
             type="date"
+            className="input-pro"
             value={to}
             onChange={(e) => setTo(e.target.value)}
           />
         </label>
         <button
-          className={s.secondary}
+          className="btn-secondary"
           onClick={() => {
             setFrom("");
             setTo("");
@@ -161,62 +177,152 @@ export function Reports() {
         </button>
       </div>
       {invalid && (
-        <p className={s.notice} role="alert">
+        <p role="alert" className="notice-error text-sm mb-7">
           La fecha inicial no puede ser posterior a la final.
         </p>
       )}
-      <div className={s.reportCards}>
-        <section className={`${s.card} ${s.cardPad}`}>
-          <h2>Existencias actuales</h2>
-          <p>
+      <div className="grid gap-6 md:grid-cols-2">
+        <section className="section-card p-6">
+          <h2 className="text-sm font-bold text-slate-100 mb-4">Existencias actuales</h2>
+          <p className="text-xs text-slate-500 mb-5">
             Productos activos e inactivos, presentación, unidad, existencia y
             mínimo. No suma unidades incompatibles.
           </p>
-          <button className={s.secondary} onClick={stockExport}>
-            <Download size={15} />
+          <button
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-lg border border-white/10 bg-white/5 text-slate-400 font-bold transition-all duration-200 hover:border-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10"
+            onClick={stockExport}
+          >
+            <Download size={16} />
             Exportar existencias CSV
           </button>
         </section>
-        <section className={`${s.card} ${s.cardPad}`}>
-          <h2>Ventas del período visible</h2>
-          <p>
-            {sales.length} registros · Importe vigente:{" "}
-            <strong>{money(net)}</strong>. Las anuladas no se suman.
+        <section className="section-card p-6">
+          <h2 className="text-sm font-bold text-slate-100 mb-4">Ventas del período visible</h2>
+          <p className="text-xs text-slate-500 mb-5">
+            {sales.length} registros · Importe vigente:
+            <br />
+            <strong className="text-emerald-400">{money(net)}</strong>. Las anuladas no se suman.
           </p>
           <button
-            className={s.secondary}
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-lg border border-white/10 bg-white/5 text-slate-400 font-bold transition-all duration-200 hover:border-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={invalid}
             onClick={salesExport}
           >
-            <Download size={15} />
+            <Download size={16} />
             Exportar ventas CSV
           </button>
         </section>
-        <section className={`${s.card} ${s.cardPad}`}>
-          <h2>Movimientos del período visible</h2>
-          <p>
+        <section className="section-card p-6">
+          <h2 className="text-sm font-bold text-slate-100 mb-4">Movimientos del período visible</h2>
+          <p className="text-xs text-slate-500 mb-5">
             {moves.length} movimientos con fecha, unidad, motivo, responsable y
             referencia de venta.
           </p>
           <button
-            className={s.secondary}
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-lg border border-white/10 bg-white/5 text-slate-400 font-bold transition-all duration-200 hover:border-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={invalid}
             onClick={movesExport}
           >
-            <Download size={15} />
+            <Download size={16} />
             Exportar movimientos CSV
           </button>
         </section>
-        <section className={`${s.card} ${s.cardPad}`}>
-          <h2>Reglas del reporte</h2>
-          <p>
+        <section className="section-card p-6">
+          <h2 className="text-sm font-bold text-slate-100 mb-4">Reglas del reporte</h2>
+          <p className="text-xs text-slate-500 mb-3">
             Moneda USD. Fechas de El Salvador. Valor comercial = stock × precio
             de venta; no representa costo contable ni utilidad.
           </p>
-          <p>
+          <p className="text-xs text-slate-500">
             Los CSV son exportaciones de consulta, no respaldos completos de la
             base de datos.
           </p>
+        </section>
+
+        <section className="section-card p-6 md:col-span-2">
+          <h2 className="text-sm font-bold text-slate-100 mb-4">
+            Compras y reabastecimiento
+          </h2>
+          <p className="text-xs text-slate-500 mb-4">
+            Gasto total en entradas de inventario con costo registrado y precio
+            promedio ponderado por unidad.
+          </p>
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="p-4 rounded-xl border border-slate-700 bg-slate-800/40">
+              <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">
+                Gasto total en compras
+              </div>
+              <div className="text-2xl font-bold text-emerald-400">
+                {money(purchaseSpend)}
+              </div>
+            </div>
+            <div className="p-4 rounded-xl border border-slate-700 bg-slate-800/40">
+              <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">
+                Unidades compradas
+              </div>
+              <div className="text-2xl font-bold text-slate-100">
+                {purchaseQty} {purchaseUnit}
+              </div>
+            </div>
+            <div className="p-4 rounded-xl border border-slate-700 bg-slate-800/40">
+              <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">
+                Costo promedio por unidad
+              </div>
+              <div className="text-2xl font-bold text-amber-400">
+                {money(avgCost)}
+              </div>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full border-collapse">
+              <thead>
+                <tr>
+                  <th className="table-header-cell px-5 py-4 text-left">Fecha</th>
+                  <th className="table-header-cell px-5 py-4 text-left">Producto</th>
+                  <th className="table-header-cell px-5 py-4 text-left">Cantidad</th>
+                  <th className="table-header-cell px-5 py-4 text-left">Costo unitario</th>
+                  <th className="table-header-cell px-5 py-4 text-left">Importe</th>
+                  <th className="table-header-cell px-5 py-4 text-left">Proveedor</th>
+                  <th className="table-header-cell px-5 py-4 text-left">Motivo</th>
+                </tr>
+              </thead>
+              <tbody>
+                {purchaseMovements.map((m) => {
+                  const p = data.products.find((x) => x.id === m.product_id);
+                  const partner = data.partners.find((x) => x.id === m.partner_id);
+                  return (
+                    <tr key={m.id} className="table-row">
+                      <td className="px-5 py-4 border-b border-slate-700 text-base text-slate-100">
+                        {date(m.created_at)}
+                      </td>
+                      <td className="px-5 py-4 border-b border-slate-700 font-bold text-slate-100 text-base">
+                        {p?.name}
+                        <br />
+                        <small className="text-slate-500 text-xs">{p?.sku}</small>
+                      </td>
+                      <td className="px-5 py-4 border-b border-slate-700 text-base text-slate-100">
+                        {m.quantity} {p?.unit}
+                      </td>
+                      <td className="px-5 py-4 border-b border-slate-700 text-base text-slate-100">
+                        {m.unit_cost ? money(m.unit_cost) : "—"}
+                      </td>
+                      <td className="px-5 py-4 border-b border-slate-700 text-base text-slate-100">
+                        {m.unit_cost
+                          ? money(m.quantity * m.unit_cost)
+                          : "—"}
+                      </td>
+                      <td className="px-5 py-4 border-b border-slate-700 text-base text-slate-100">
+                        {partner?.name || "—"}
+                      </td>
+                      <td className="px-5 py-4 border-b border-slate-700 text-base text-slate-100">
+                        {m.reason}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </section>
       </div>
     </>

@@ -2,7 +2,6 @@
 import { useState, type FormEvent } from "react";
 import { browserDb } from "@/lib/supabase";
 import { useStore } from "@/components/provider";
-import s from "@/components/ui.module.css";
 export default function Recover() {
   const { demo, logout } = useStore();
   const [password, setPassword] = useState(""),
@@ -31,13 +30,13 @@ export default function Recover() {
     }
   }
   return (
-    <section className={`${s.card} ${s.cardPad}`}>
-      <h1>Actualizar contraseña</h1>
-      <p>
+    <section className="section-card">
+      <h1 className="text-lg font-bold text-slate-100 mb-2">Actualizar contraseña</h1>
+      <p className="text-sm text-slate-400 mb-4">
         Abre el enlace de recuperación enviado a tu correo antes de continuar.
       </p>
-      <form onSubmit={submit} className={s.stack}>
-        <label>
+      <form onSubmit={submit} className="flex flex-col gap-5">
+        <label className="flex flex-col gap-2 text-sm font-bold text-slate-500">
           Nueva contraseña (mínimo 12 caracteres)
           <input
             type="password"
@@ -45,30 +44,38 @@ export default function Recover() {
             required
             value={password}
             autoComplete="new-password"
+            className="input-pro"
             onChange={(e) => setPassword(e.target.value)}
           />
         </label>
-        <label>
+        <label className="flex flex-col gap-2 text-sm font-bold text-slate-500">
           Repite la contraseña
           <input
             type="password"
             minLength={12}
             required
-            autoComplete="new-password"
             value={repeat}
+            autoComplete="new-password"
+            className="input-pro"
             onChange={(e) => setRepeat(e.target.value)}
           />
         </label>
-        <button disabled={busy || demo}>
+        <button
+          disabled={busy || demo}
+          className="inline-flex items-center gap-2 bg-emerald-600 text-white font-bold px-5 py-3 rounded-lg shadow-[0_10px_15px_-5px_rgba(16,185,129,0.3)] transition-all duration-200 hover:bg-emerald-500 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           {busy ? "Actualizando…" : "Actualizar contraseña"}
         </button>
       </form>
       {message && (
-        <p role="status" className={s.notice}>
+        <p role="status" className="mt-2 notice-success text-sm">
           {message}
         </p>
       )}
-      <button className={s.secondary} onClick={() => void logout()}>
+      <button
+        onClick={() => void logout()}
+        className="mt-2 inline-flex items-center gap-2 px-5 py-3 rounded-lg border border-white/10 bg-white/5 text-slate-400 font-bold text-sm hover:border-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+      >
         Cerrar sesión
       </button>
     </section>

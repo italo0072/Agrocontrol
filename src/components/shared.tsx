@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import s from "./ui.module.css";
 export const money = (n: number) =>
   new Intl.NumberFormat("es-SV", { style: "currency", currency: "USD" }).format(
     n,
@@ -24,18 +23,22 @@ export function Heading({
   children?: ReactNode;
 }) {
   return (
-    <div className={s.heading}>
+    <div className="page-header">
       <div>
-        <p className={s.eyebrow}>{eyebrow}</p>
-        <h1>{title}</h1>
-        <p>{description}</p>
+        <p className="text-[10px] tracking-[2px] text-emerald-400 font-bold uppercase mb-2">
+          {eyebrow}
+        </p>
+        <h1 className="text-2xl tracking-tight text-slate-100 font-bold mb-1">
+          {title}
+        </h1>
+        <p className="text-sm text-slate-400">{description}</p>
       </div>
       {children}
     </div>
   );
 }
 export function Empty({ children }: { children: ReactNode }) {
-  return <div className={s.empty}>{children}</div>;
+  return <div className="empty-pro">{children}</div>;
 }
 export function Notice({
   message,
@@ -45,7 +48,14 @@ export function Notice({
   success?: boolean;
 }) {
   return message ? (
-    <p role="status" className={`${s.notice} ${success ? s.success : ""}`}>
+    <p
+      role="status"
+      className={`notice-pro ${
+        success
+          ? "notice-success"
+          : "notice-error"
+      }`}
+    >
       {message}
     </p>
   ) : null;
@@ -61,7 +71,13 @@ export function Badge({
 }) {
   return (
     <span
-      className={`${s.pill} ${warn ? s.warning : ""} ${inactive ? s.inactive : ""}`}
+      className={`badge-pro ${
+        warn
+          ? "badge-warn"
+          : inactive
+            ? "badge-inactive"
+            : "badge-active"
+      }`}
     >
       {children}
     </span>

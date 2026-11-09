@@ -2,7 +2,7 @@ import { z } from "zod";
 export const roles = ["admin", "bodega", "ventas", "lectura"] as const;
 export type Role = (typeof roles)[number];
 export const units = ["saco", "kg", "litro", "unidad"] as const;
-export const categories = [
+export const defaultCategories = [
   "Nitrogenado",
   "Fosfatado",
   "Potásico",
@@ -10,6 +10,47 @@ export const categories = [
   "Orgánico",
   "Otro",
 ] as const;
+export type CategoryName = (typeof defaultCategories)[number];
+
+export interface ProductCategory {
+  id: string;
+  name: string;
+  active: boolean;
+  created_at: string;
+}
+
+export function getCustomCategories(): ProductCategory[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem("agrocontrol:categories");
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (c: ProductCategory) => c && typeof c.name === "string",
+    );
+  } catch {
+    return [];
+  }
+}
+
+export function saveCustomCategories(cats: ProductCategory[]): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem("agrocontrol:categories", JSON.stringify(cats));
+}
+
+export function allCategories(): string[] {
+  const custom = getCustomCategories().filter((c) => c.active);
+  return [...defaultCategories, ...custom.map((c) => c.name)];
+}
+
+export function categoryOptions(): { value: string; label: string }[] {
+  const custom = getCustomCategories().filter((c) => c.active);
+  return [
+    ...defaultCategories.map((v) => ({ value: v, label: v })),
+    ...custom.map((c) => ({ value: c.name, label: c.name })),
+  ];
+}
 const text = (n: number) =>
   z.string().trim().min(1, "Campo obligatorio").max(n);
 const qty = z
@@ -34,7 +75,7 @@ export const productInput = z.object({
     .regex(/^[A-Za-z0-9_-]+$/, "Solo letras, números, guion o guion bajo")
     .transform((s) => s.toUpperCase()),
   name: text(120),
-  category: z.enum(categories),
+  category: z.string().min(1, "Categoría obligatoria"),
   unit: z.enum(units),
   presentation: text(80),
   price: money,
@@ -68,6 +109,7 @@ export const commandSchema = z.discriminatedUnion("type", [
     quantity: qty,
     reason: text(250),
     partner_id: z.union([z.uuid(), z.literal("")]),
+    unit_cost: z.number().min(0).max(1000000).optional(),
   }),
   z.object({
     type: z.literal("sale"),
@@ -106,6 +148,7 @@ export type Movement = {
   sale_id: string | null;
   request_id: string | null;
   partner_id: string | null;
+  unit_cost: number | null;
 };
 export type SaleItem = {
   product_id: string;

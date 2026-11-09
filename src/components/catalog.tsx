@@ -1,9 +1,11 @@
 "use client";
 import { useState, type FormEvent } from "react";
-import { Plus, Search } from "lucide-react";
+import { Plus } from "lucide-react";
 import { ZodError } from "zod";
 import {
-  categories,
+  defaultCategories,
+  allCategories,
+  categoryOptions,
   units,
   commandSchema,
   can,
@@ -12,7 +14,6 @@ import {
 } from "@/lib/domain";
 import { useStore } from "./provider";
 import { Heading, Empty, Badge, Notice, money, quantity } from "./shared";
-import s from "./ui.module.css";
 const errorText = (e: unknown) =>
   e instanceof ZodError
     ? e.issues[0].message
@@ -34,8 +35,8 @@ function ProductForm({
       category: initial?.category || "Compuesto",
       unit: initial?.unit || "saco",
       presentation: initial?.presentation || "",
-      price: initial?.price ?? 0,
-      min_stock: initial?.min_stock ?? 0,
+      price: initial?.price?.toString() ?? "",
+      min_stock: initial?.min_stock?.toString() ?? "",
       active: initial?.active ?? true,
     }),
     [message, setMessage] = useState("");
@@ -43,43 +44,57 @@ function ProductForm({
     e.preventDefault();
     setMessage("");
     try {
-      await execute(commandSchema.parse({ type: "product", data: form }));
+      await execute(
+        commandSchema.parse({
+          type: "product",
+          data: {
+            ...form,
+            price: form.price ? Number(form.price) : 0,
+            min_stock: form.min_stock ? Number(form.min_stock) : 0,
+          },
+        }),
+      );
       onClose(true);
     } catch (e) {
       setMessage(errorText(e));
     }
   }
   return (
-    <section className={`${s.card} ${s.cardPad}`}>
-      <div className={s.formTitle}>
-        <h2>{initial ? "Editar producto" : "Nuevo producto"}</h2>
-        <span className={s.muted}>* Campos obligatorios</span>
+    <section className="section-card">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl font-bold text-slate-100">
+          {initial ? "Editar producto" : "Nuevo producto"}
+        </h2>
+        <span className="text-xs text-slate-400">* Campos obligatorios</span>
       </div>
       <form onSubmit={submit}>
-        <div className={s.formGrid}>
-          <label>
+        <div className="grid grid-cols-2 gap-6">
+          <label className="flex flex-col gap-2 text-sm font-bold text-slate-500">
             Código único *
             <input
               required
               maxLength={40}
               pattern="[A-Za-z0-9_-]+"
               placeholder="FER-001"
+              className="input-pro"
               value={form.sku}
               onChange={(e) => setForm({ ...form, sku: e.target.value })}
             />
           </label>
-          <label>
+          <label className="flex flex-col gap-2 text-sm font-bold text-slate-500">
             Nombre *
             <input
               required
               maxLength={120}
+              className="input-pro"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
             />
           </label>
-          <label>
+          <label className="flex flex-col gap-2 text-sm font-bold text-slate-500">
             Categoría
             <select
+              className="select-pro"
               value={form.category}
               onChange={(e) =>
                 setForm({
@@ -88,14 +103,17 @@ function ProductForm({
                 })
               }
             >
-              {categories.map((v) => (
-                <option key={v}>{v}</option>
+              {categoryOptions().map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
               ))}
             </select>
           </label>
-          <label>
+          <label className="flex flex-col gap-2 text-sm font-bold text-slate-500">
             Unidad de inventario
             <select
+              className="select-pro"
               value={form.unit}
               onChange={(e) =>
                 setForm({ ...form, unit: e.target.value as typeof form.unit })
@@ -106,70 +124,75 @@ function ProductForm({
               ))}
             </select>
           </label>
-          <label>
+          <label className="flex flex-col gap-2 text-sm font-bold text-slate-500">
             Presentación *
             <input
               required
               maxLength={80}
               placeholder="Saco de 50 kg"
+              className="input-pro"
               value={form.presentation}
               onChange={(e) =>
-                setForm({ ...form, presentation: e.target.value })
-              }
+                setForm({ ...form, presentation: e.target.value })}
             />
           </label>
-          <label>
+          <label className="flex flex-col gap-2 text-sm font-bold text-slate-500">
             Precio de venta por unidad (USD) *
             <input
-              type="number"
+              type="text"
+              inputMode="decimal"
               min="0"
               max="1000000"
               step="0.01"
               required
+              className="input-pro"
               value={form.price}
               onChange={(e) =>
-                setForm({ ...form, price: Number(e.target.value) })
+                setForm({ ...form, price: e.target.value.replace(/[^0-9.]/g, "") })
               }
             />
           </label>
-          <label>
+          <label className="flex flex-col gap-2 text-sm font-bold text-slate-500">
             Existencia mínima *
             <input
-              type="number"
+              type="text"
+              inputMode="decimal"
               min="0"
               max="1000000"
               step="0.001"
               required
+              className="input-pro"
               value={form.min_stock}
               onChange={(e) =>
-                setForm({ ...form, min_stock: Number(e.target.value) })
+                setForm({ ...form, min_stock: e.target.value.replace(/[^0-9.]/g, "") })
               }
             />
           </label>
-          <label className={s.check}>
+          <label className="flex items-center gap-3">
             <input
               type="checkbox"
+              className="w-5 h-5 rounded border-slate-600 text-emerald-600 focus:ring-emerald-500 bg-slate-900"
               checked={form.active}
               onChange={(e) => setForm({ ...form, active: e.target.checked })}
             />
-            Producto activo
+            <span className="text-slate-300 text-base">Producto activo</span>
           </label>
         </div>
-        <p className={s.muted}>
+        <p className="text-xs text-slate-500 mt-2">
           El stock se modifica desde Inventario o Ventas. La unidad queda
           protegida cuando existen movimientos.
         </p>
         <Notice message={message} />
-        <div className={s.actions}>
+        <div className="flex gap-4 justify-end mt-7 flex-wrap">
           <button
             type="button"
-            className={s.secondary}
+            className="btn-secondary"
             disabled={busy}
             onClick={() => onClose()}
           >
             Cancelar
           </button>
-          <button disabled={busy}>
+          <button disabled={busy} className="btn-primary">
             {busy ? "Guardando…" : "Guardar producto"}
           </button>
         </div>
@@ -199,13 +222,11 @@ export function Products() {
         description="Un código, una presentación y una unidad para cada producto."
       >
         {can(data.role, "product") && (
-          <button
-            onClick={() => {
-              setNotice("");
-              setEdit("new");
-            }}
-          >
-            <Plus size={16} />
+          <button className="btn-primary" onClick={() => {
+            setNotice("");
+            setEdit("new");
+          }}>
+            <Plus size={18} className="mr-2" />
             Nuevo producto
           </button>
         )}
@@ -221,71 +242,78 @@ export function Products() {
           }}
         />
       )}
-      <div className={s.toolbar}>
-        <label>
-          Buscar producto
+      <div className="flex items-end gap-4 flex-wrap mb-7">
+        <label className="flex-1 min-w-[200px] max-w-[440px] flex flex-col gap-2">
+          <span className="text-xs text-slate-500">Buscar producto</span>
           <input
+            className="input-pro"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Código o nombre…"
           />
         </label>
-        <label>
-          Categoría
+        <label className="flex-1 min-w-[200px] max-w-[440px] flex flex-col gap-2">
+          <span className="text-xs text-slate-500">Categoría</span>
           <select
+            className="select-pro"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
           >
             <option value="">Todas</option>
-            {categories.map((v) => (
-              <option key={v}>{v}</option>
+            {categoryOptions().map((o) => (
+              <option key={o.value} value={o.value}>{o.label}</option>
             ))}
           </select>
         </label>
-        <label>
-          Visibilidad
-          <select value={state} onChange={(e) => setState(e.target.value)}>
+        <label className="flex-1 min-w-[200px] max-w-[440px] flex flex-col gap-2">
+          <span className="text-xs text-slate-500">Visibilidad</span>
+          <select
+            className="select-pro"
+            value={state}
+            onChange={(e) => setState(e.target.value)}
+          >
             <option value="activos">Activos</option>
             <option value="inactivos">Inactivos</option>
             <option value="todos">Todos</option>
           </select>
         </label>
       </div>
-      <section className={s.card}>
-        <div className={s.cardTitle}>
-          <h2>Catálogo de productos</h2>
-          <span>{filtered.length} productos</span>
+      <section className="section-card overflow-hidden">
+        <div className="p-5 border-b border-slate-700 flex items-center justify-between gap-5">
+          <h2 className="text-xs font-bold text-slate-100 uppercase tracking-wider">Catálogo de productos</h2>
+          <span className="text-xs text-slate-500">{filtered.length} productos</span>
         </div>
-        <div className={s.tableWrap}>
-          <table>
+        <div className="overflow-x-auto">
+          <table className="min-w-[800px] w-full border-collapse">
             <thead>
               <tr>
-                <th>Código / Producto</th>
-                <th>Categoría</th>
-                <th>Presentación</th>
-                <th>Precio</th>
-                <th>Existencia</th>
-                <th>Estado</th>
-                {can(data.role, "product") && <th>Acciones</th>}
+                <th className="table-header-cell px-5 py-4 text-left">Código / Producto</th>
+                <th className="table-header-cell px-5 py-4 text-left">Categoría</th>
+                <th className="table-header-cell px-5 py-4 text-left">Presentación</th>
+                <th className="table-header-cell px-5 py-4 text-left">Precio</th>
+                <th className="table-header-cell px-5 py-4 text-left">Existencia</th>
+                <th className="table-header-cell px-5 py-4 text-left">Estado</th>
+                {can(data.role, "product") && (
+                  <th className="table-header-cell px-5 py-4 text-left">Acciones</th>
+                )}
               </tr>
             </thead>
             <tbody>
               {filtered.map((p) => (
-                <tr key={p.id}>
-                  <td>
-                    <span className={s.code}>{p.sku}</span>
-                    <div className={s.productName}>{p.name}</div>
+                <tr key={p.id} className="table-row">
+                  <td className="px-5 py-4 border-b border-slate-700 font-bold text-slate-100 text-base">
+                    <span className="text-xs text-slate-500 font-mono bg-slate-900/50 px-2.5 py-1 rounded border border-slate-700 inline-block">{p.sku}</span>
+                    <div className="text-slate-100">{p.name}</div>
                   </td>
-                  <td>{p.category}</td>
-                  <td>
+                  <td className="px-5 py-4 border-b border-slate-700 text-base text-slate-100">{p.category}</td>
+                  <td className="px-5 py-4 border-b border-slate-700 text-base text-slate-100">
                     {p.presentation}
-                    <small>Unidad: {p.unit}</small>
+                    <br />
+                    <small className="text-slate-500 text-xs">Unidad: {p.unit}</small>
                   </td>
-                  <td>{money(p.price)}</td>
-                  <td>
-                    {quantity(p.stock)} {p.unit}
-                  </td>
-                  <td>
+                  <td className="px-5 py-4 border-b border-slate-700 text-base text-slate-100">{money(p.price)}</td>
+                  <td className="px-5 py-4 border-b border-slate-700 text-base text-slate-100">{quantity(p.stock)} {p.unit}</td>
+                  <td className="px-5 py-4 border-b border-slate-700 text-base text-slate-100">
                     <Badge
                       inactive={!p.active}
                       warn={p.active && p.stock <= p.min_stock}
@@ -298,9 +326,9 @@ export function Products() {
                     </Badge>
                   </td>
                   {can(data.role, "product") && (
-                    <td>
+                    <td className="px-5 py-4 border-b border-slate-700 text-base">
                       <button
-                        className={s.inlineButton}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-xl hover:bg-emerald-500/20 hover:text-emerald-300 transition-colors"
                         onClick={() => {
                           setNotice("");
                           setEdit(p);
@@ -353,23 +381,27 @@ function PartnerForm({
     }
   }
   return (
-    <section className={`${s.card} ${s.cardPad}`}>
-      <h2>{initial ? "Editar contacto" : "Nuevo contacto"}</h2>
+    <section className="section-card">
+      <h2 className="text-xl font-bold text-slate-100 mb-6">
+        {initial ? "Editar contacto" : "Nuevo contacto"}
+      </h2>
       <form onSubmit={submit}>
-        <div className={s.formGrid}>
-          <label>
+        <div className="grid grid-cols-2 gap-6">
+          <label className="flex flex-col gap-2 text-sm font-bold text-slate-500">
             Nombre o razón social *
             <input
               required
               maxLength={120}
+              className="input-pro"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
             />
           </label>
-          <label>
+          <label className="flex flex-col gap-2 text-sm font-bold text-slate-500">
             Tipo
             <select
               disabled={Boolean(initial)}
+              className="select-pro"
               value={form.kind}
               onChange={(e) =>
                 setForm({ ...form, kind: e.target.value as typeof form.kind })
@@ -379,51 +411,55 @@ function PartnerForm({
               <option value="proveedor">Proveedor</option>
             </select>
           </label>
-          <label>
+          <label className="flex flex-col gap-2 text-sm font-bold text-slate-500">
             Documento / Identificador
             <input
               maxLength={40}
+              className="input-pro"
               value={form.document}
               onChange={(e) => setForm({ ...form, document: e.target.value })}
             />
           </label>
-          <label>
+          <label className="flex flex-col gap-2 text-sm font-bold text-slate-500">
             Correo
             <input
               type="email"
               maxLength={254}
+              className="input-pro"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
             />
           </label>
-          <label>
+          <label className="flex flex-col gap-2 text-sm font-bold text-slate-500">
             Teléfono
             <input
               maxLength={30}
+              className="input-pro"
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
             />
           </label>
-          <label className={s.check}>
+          <label className="flex items-center gap-3">
             <input
               type="checkbox"
+              className="w-5 h-5 rounded border-slate-600 text-emerald-600 focus:ring-emerald-500 bg-slate-900"
               checked={form.active}
               onChange={(e) => setForm({ ...form, active: e.target.checked })}
             />
-            Contacto activo
+            <span className="text-slate-300 text-base">Contacto activo</span>
           </label>
         </div>
         <Notice message={message} />
-        <div className={s.actions}>
+        <div className="flex gap-4 justify-end mt-7 flex-wrap">
           <button
             type="button"
-            className={s.secondary}
+            className="btn-secondary"
             disabled={busy}
             onClick={onClose}
           >
             Cancelar
           </button>
-          <button disabled={busy}>
+          <button disabled={busy} className="btn-primary">
             {busy ? "Guardando…" : "Guardar contacto"}
           </button>
         </div>
@@ -450,8 +486,8 @@ export function Contacts() {
         description="Una ficha consistente para cada contacto de tu empresa."
       >
         {can(data.role, "partner") && (
-          <button onClick={() => setEdit("new")}>
-            <Plus size={16} />
+          <button className="btn-primary" onClick={() => setEdit("new")}>
+            <Plus size={18} className="mr-2" />
             Nuevo contacto
           </button>
         )}
@@ -463,60 +499,66 @@ export function Contacts() {
           onClose={() => setEdit(null)}
         />
       )}
-      <div className={s.toolbar}>
-        <label>
-          Buscar contacto
+      <div className="flex items-end gap-4 flex-wrap mb-7">
+        <label className="flex-1 min-w-[200px] max-w-[440px] flex flex-col gap-2">
+          <span className="text-xs text-slate-500">Buscar contacto</span>
           <input
+            className="input-pro"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Nombre o documento…"
           />
         </label>
-        <label>
-          Tipo
-          <select value={kind} onChange={(e) => setKind(e.target.value)}>
+        <label className="flex-1 min-w-[200px] max-w-[440px] flex flex-col gap-2">
+          <span className="text-xs text-slate-500">Tipo</span>
+          <select
+            className="select-pro"
+            value={kind}
+            onChange={(e) => setKind(e.target.value)}
+          >
             <option value="">Todos</option>
             <option value="cliente">Clientes</option>
             <option value="proveedor">Proveedores</option>
           </select>
         </label>
       </div>
-      <section className={s.card}>
-        <div className={s.cardTitle}>
-          <h2>Directorio comercial</h2>
-          <span>{filtered.length} contactos</span>
+      <section className="section-card overflow-hidden">
+        <div className="p-5 border-b border-slate-700 flex items-center justify-between gap-5">
+          <h2 className="text-xs font-bold text-slate-100 uppercase tracking-wider">Directorio comercial</h2>
+          <span className="text-xs text-slate-500">{filtered.length} contactos</span>
         </div>
-        <div className={s.tableWrap}>
-          <table>
+        <div className="overflow-x-auto">
+          <table className="min-w-[800px] w-full border-collapse">
             <thead>
               <tr>
-                <th>Nombre</th>
-                <th>Tipo</th>
-                <th>Documento</th>
-                <th>Contacto</th>
-                <th>Estado</th>
-                {can(data.role, "partner") && <th>Acciones</th>}
+                <th className="table-header-cell px-5 py-4 text-left">Nombre</th>
+                <th className="table-header-cell px-5 py-4 text-left">Tipo</th>
+                <th className="table-header-cell px-5 py-4 text-left">Documento</th>
+                <th className="table-header-cell px-5 py-4 text-left">Contacto</th>
+                <th className="table-header-cell px-5 py-4 text-left">Estado</th>
+                {can(data.role, "partner") && <th className="table-header-cell px-5 py-4 text-left">Acciones</th>}
               </tr>
             </thead>
             <tbody>
               {filtered.map((p) => (
-                <tr key={p.id}>
-                  <td className={s.productName}>{p.name}</td>
-                  <td>{p.kind}</td>
-                  <td>{p.document || "—"}</td>
-                  <td>
+                <tr key={p.id} className="table-row">
+                  <td className="px-5 py-4 border-b border-slate-700 font-bold text-slate-100 text-base">{p.name}</td>
+                  <td className="px-5 py-4 border-b border-slate-700 text-base text-slate-100">{p.kind}</td>
+                  <td className="px-5 py-4 border-b border-slate-700 text-base text-slate-100">{p.document || "—"}</td>
+                  <td className="px-5 py-4 border-b border-slate-700 text-base text-slate-100">
                     {p.email || "—"}
-                    <small>{p.phone}</small>
+                    <br />
+                    <small className="text-slate-500 text-xs">{p.phone}</small>
                   </td>
-                  <td>
+                  <td className="px-5 py-4 border-b border-slate-700 text-base text-slate-100">
                     <Badge inactive={!p.active}>
                       {p.active ? "Activo" : "Inactivo"}
                     </Badge>
                   </td>
                   {can(data.role, "partner") && (
-                    <td>
+                    <td className="px-5 py-4 border-b border-slate-700 text-base">
                       <button
-                        className={s.inlineButton}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-xl hover:bg-emerald-500/20 hover:text-emerald-300 transition-colors"
                         onClick={() => {
                           setEdit(p);
                           window.scrollTo({ top: 0, behavior: "smooth" });
