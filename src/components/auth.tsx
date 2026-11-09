@@ -1,11 +1,133 @@
 "use client";
-import {useState,type FormEvent} from "react";
-import {Sprout,ArrowRight,ShieldCheck} from "lucide-react";
-import {browserDb,configured} from "@/lib/supabase";
-import {useStore} from "./provider";
+import { useState, type FormEvent } from "react";
+import { Sprout, ArrowRight, ShieldCheck } from "lucide-react";
+import { browserDb, configured } from "@/lib/supabase";
+import { useStore } from "./provider";
 import s from "./ui.module.css";
-export function Auth(){const {enterDemo,error}=useStore();const [email,setEmail]=useState(""),[password,setPassword]=useState(""),[busy,setBusy]=useState(false),[message,setMessage]=useState("");
- async function login(e:FormEvent){e.preventDefault();setBusy(true);setMessage("");try{const {error}=await browserDb().auth.signInWithPassword({email,password});if(error)throw new Error("No se pudo iniciar sesión. Revisa tus credenciales.");}catch(e){setMessage((e as Error).message);}finally{setBusy(false);}}
- async function recover(){if(!email){setMessage("Escribe tu correo para solicitar la recuperación.");return;}setBusy(true);try{const {error}=await browserDb().auth.resetPasswordForEmail(email,{redirectTo:`${location.origin}/recuperar`});if(error)throw error;setMessage("Si el correo corresponde a una cuenta, recibirás las instrucciones de recuperación.");}catch{setMessage("No se pudo solicitar la recuperación. Revisa la configuración de correo.");}finally{setBusy(false);}}
- return <div className={s.auth}><section className={s.authStory}><div className={s.brand}><Sprout size={32}/> AgroControl</div><p className={s.eyebrow}>INFORMACIÓN CLARA. OPERACIÓN CONECTADA.</p><h1>Más control para<br/>hacer crecer<br/>tu negocio.</h1><p>Productos, existencias y ventas de fertilizantes en un solo lugar.</p><div className={s.authNote}><ShieldCheck/><span>Una fuente de información para todo tu equipo.</span></div></section><section className={s.authForm}><p className={s.eyebrow}>BIENVENIDO A TU ESPACIO</p><h2>Inicia sesión</h2><p>Accede con la cuenta asignada por tu administrador.</p><form onSubmit={login} className={s.stack}><label>Correo electrónico<input type="email" required autoComplete="username" value={email} onChange={e=>setEmail(e.target.value)}/></label><label>Contraseña<input type="password" required autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)}/></label><button disabled={!configured||busy}>{busy?"Conectando…":"Ingresar"}<ArrowRight size={17}/></button><button type="button" className={s.linkButton} disabled={!configured||busy} onClick={()=>void recover()}>¿Olvidaste tu contraseña?</button></form>{!configured&&<p className={s.notice}>Para usar datos compartidos, configura Supabase siguiendo el README. Puedes explorar la demo ahora.</p>}{(message||error)&&<p role="status" className={s.notice}>{message||error}</p>}<div className={s.demoEntry}><strong>Explora antes de configurar</strong><p>Prueba el sistema con datos ficticios, sin crear una cuenta.</p><button className={s.secondary} onClick={enterDemo}>Abrir demostración →</button></div></section></div>;
+export function Auth() {
+  const { enterDemo, error } = useStore();
+  const [email, setEmail] = useState(""),
+    [password, setPassword] = useState(""),
+    [busy, setBusy] = useState(false),
+    [message, setMessage] = useState("");
+  async function login(e: FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setMessage("");
+    try {
+      const { error } = await browserDb().auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error)
+        throw new Error("No se pudo iniciar sesión. Revisa tus credenciales.");
+    } catch (e) {
+      setMessage((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function recover() {
+    if (!email) {
+      setMessage("Escribe tu correo para solicitar la recuperación.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const { error } = await browserDb().auth.resetPasswordForEmail(email, {
+        redirectTo: `${location.origin}/recuperar`,
+      });
+      if (error) throw error;
+      setMessage(
+        "Si el correo corresponde a una cuenta, recibirás las instrucciones de recuperación.",
+      );
+    } catch {
+      setMessage(
+        "No se pudo solicitar la recuperación. Revisa la configuración de correo.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <div className={s.auth}>
+      <section className={s.authStory}>
+        <div className={s.brand}>
+          <Sprout size={32} /> AgroControl
+        </div>
+        <p className={s.eyebrow}>INFORMACIÓN CLARA. OPERACIÓN CONECTADA.</p>
+        <h1>
+          Más control para
+          <br />
+          hacer crecer
+          <br />
+          tu negocio.
+        </h1>
+        <p>
+          Productos, existencias y ventas de fertilizantes en un solo lugar.
+        </p>
+        <div className={s.authNote}>
+          <ShieldCheck />
+          <span>Una fuente de información para todo tu equipo.</span>
+        </div>
+      </section>
+      <section className={s.authForm}>
+        <p className={s.eyebrow}>BIENVENIDO A TU ESPACIO</p>
+        <h2>Inicia sesión</h2>
+        <p>Accede con la cuenta asignada por tu administrador.</p>
+        <form onSubmit={login} className={s.stack}>
+          <label>
+            Correo electrónico
+            <input
+              type="email"
+              required
+              autoComplete="username"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </label>
+          <label>
+            Contraseña
+            <input
+              type="password"
+              required
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </label>
+          <button disabled={!configured || busy}>
+            {busy ? "Conectando…" : "Ingresar"}
+            <ArrowRight size={17} />
+          </button>
+          <button
+            type="button"
+            className={s.linkButton}
+            disabled={!configured || busy}
+            onClick={() => void recover()}
+          >
+            ¿Olvidaste tu contraseña?
+          </button>
+        </form>
+        {!configured && (
+          <p className={s.notice}>
+            Para usar datos compartidos, configura Supabase siguiendo el README.
+            Puedes explorar la demo ahora.
+          </p>
+        )}
+        {(message || error) && (
+          <p role="status" className={s.notice}>
+            {message || error}
+          </p>
+        )}
+        <div className={s.demoEntry}>
+          <strong>Explora antes de configurar</strong>
+          <p>Prueba el sistema con datos ficticios, sin crear una cuenta.</p>
+          <button className={s.secondary} onClick={enterDemo}>
+            Abrir demostración →
+          </button>
+        </div>
+      </section>
+    </div>
+  );
 }

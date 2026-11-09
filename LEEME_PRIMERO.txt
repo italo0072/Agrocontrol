@@ -1,0 +1,20 @@
+AGROCONTROL · INVENTARIO Y VENTAS DE FERTILIZANTES
+
+1. Instala Node.js 24 LTS desde https://nodejs.org
+2. Extrae TODO el ZIP y abre la carpeta agrocontrol en VS Code.
+3. Abre una terminal donde está package.json y ejecuta:
+
+   npm ci
+   Copy-Item .env.example .env.local
+   npm run dev
+
+4. Abre http://localhost:3000 y pulsa Abrir demostración.
+
+La demo funciona sin cuentas y usa datos ficticios en el navegador.
+Para datos compartidos: sigue docs/CONFIGURAR_SUPABASE.md.
+Para publicar: sigue README.md (GitHub y Vercel).
+Para detener el servidor: Ctrl+C.
+Si PowerShell bloquea npm.ps1, usa npm.cmd en lugar de npm.
+
+La entrega de la tarea aún necesita tu repositorio público, URL real de
+producción y las pruebas personales indicadas en docs/PRUEBAS_MANUALES.md.
