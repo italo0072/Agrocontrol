@@ -39,14 +39,14 @@ Debes ver tu correo con rol `admin`. Si no aparece, el usuario no existe o el co
 
 Crea cada usuario desde Authentication → Users y usa el mismo SQL cambiando el correo y el rol. Valores permitidos: `admin`, `ventas`, `bodega`, `lectura`.
 
-| Operación | admin | ventas | bodega | lectura |
-|---|---|---|---|---|
-| Consultar y exportar | Sí | Sí | Sí | Sí |
-| Crear/editar/desactivar productos | Sí | No | No | No |
-| Crear/editar/desactivar contactos | Sí | Sí | No | No |
-| Entradas/salidas manuales | Sí | No | Sí | No |
-| Registrar/anular ventas | Sí | Sí | No | No |
-| Asignar roles | Desde SQL Editor | No | No | No |
+| Operación                         | admin            | ventas | bodega | lectura |
+| --------------------------------- | ---------------- | ------ | ------ | ------- |
+| Consultar y exportar              | Sí               | Sí     | Sí     | Sí      |
+| Crear/editar/desactivar productos | Sí               | No     | No     | No      |
+| Crear/editar/desactivar contactos | Sí               | Sí     | No     | No      |
+| Entradas/salidas manuales         | Sí               | No     | Sí     | No      |
+| Registrar/anular ventas           | Sí               | Sí     | No     | No      |
+| Asignar roles                     | Desde SQL Editor | No     | No     | No      |
 
 Para retirar acceso a un usuario, elimina su perfil desde SQL Editor usando el correo exacto:
 

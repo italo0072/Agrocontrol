@@ -64,18 +64,18 @@ La demostración permite este mismo recorrido, pero guarda datos ficticios local
 
 ## 4. Arquitectura
 
-| Capa | Implementación |
-|---|---|
-| Páginas y layout | Server Components de App Router |
-| Interacción | Client Components con `useState`, `useEffect`, contexto y formularios |
-| Estilos | `ui.module.css` y resets globales |
-| API | `GET /api/data` y `POST /api/commands` mediante fetch |
-| Validación | Zod en Route Handler, restricciones y reglas en PostgreSQL |
-| Identidad | Supabase Auth; verificación `getUser` en el servidor |
-| Autorización | Perfiles, RLS y funciones que vuelven a comprobar el rol |
-| Persistencia real | PostgreSQL de Supabase |
-| Persistencia demo | Adaptador local en `localStorage` |
-| Pruebas | Node Test Runner, TypeScript y PostgreSQL embebido PGlite |
+| Capa              | Implementación                                                        |
+| ----------------- | --------------------------------------------------------------------- |
+| Páginas y layout  | Server Components de App Router                                       |
+| Interacción       | Client Components con `useState`, `useEffect`, contexto y formularios |
+| Estilos           | `ui.module.css` y resets globales                                     |
+| API               | `GET /api/data` y `POST /api/commands` mediante fetch                 |
+| Validación        | Zod en Route Handler, restricciones y reglas en PostgreSQL            |
+| Identidad         | Supabase Auth; verificación `getUser` en el servidor                  |
+| Autorización      | Perfiles, RLS y funciones que vuelven a comprobar el rol              |
+| Persistencia real | PostgreSQL de Supabase                                                |
+| Persistencia demo | Adaptador local en `localStorage`                                     |
+| Pruebas           | Node Test Runner, TypeScript y PostgreSQL embebido PGlite             |
 
 ```mermaid
 flowchart TD
@@ -179,16 +179,16 @@ No se ha creado ni publicado un repositorio en tu cuenta. No se inventa una URL 
 
 ## Problemas frecuentes
 
-| Problema | Solución |
-|---|---|
-| `npm` no se reconoce | Instala Node.js y abre otra terminal |
-| Falta `package.json` | Entra a la carpeta agrocontrol, no a src |
-| Puerto 3000 ocupado | `npm run dev -- --port 3001` y abre ese puerto |
-| Usuario sin acceso | Asigna el perfil mediante SQL; crear el usuario no asigna rol automáticamente |
-| No puede leer datos | Verifica variables, migración y perfil; reinicia el servidor tras cambiar `.env.local` |
-| Cambié variables y no se refleja | Reinicia `npm run dev`; en Vercel realiza un nuevo despliegue |
-| Recuperación no llega | Revisa URL permitida, configuración de correo de Supabase y carpeta de spam |
-| Falla la actualización después de guardar | Pulsa Actualizar y comprueba el historial antes de repetir la operación |
+| Problema                                  | Solución                                                                               |
+| ----------------------------------------- | -------------------------------------------------------------------------------------- |
+| `npm` no se reconoce                      | Instala Node.js y abre otra terminal                                                   |
+| Falta `package.json`                      | Entra a la carpeta agrocontrol, no a src                                               |
+| Puerto 3000 ocupado                       | `npm run dev -- --port 3001` y abre ese puerto                                         |
+| Usuario sin acceso                        | Asigna el perfil mediante SQL; crear el usuario no asigna rol automáticamente          |
+| No puede leer datos                       | Verifica variables, migración y perfil; reinicia el servidor tras cambiar `.env.local` |
+| Cambié variables y no se refleja          | Reinicia `npm run dev`; en Vercel realiza un nuevo despliegue                          |
+| Recuperación no llega                     | Revisa URL permitida, configuración de correo de Supabase y carpeta de spam            |
+| Falla la actualización después de guardar | Pulsa Actualizar y comprueba el historial antes de repetir la operación                |
 
 ## Documentación
 
