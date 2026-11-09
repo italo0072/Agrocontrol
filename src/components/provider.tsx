@@ -9,7 +9,7 @@ import {
 } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { browserDb, configured } from "@/lib/supabase";
-import { applyDemo, seed } from "@/lib/demo";
+import { applyDemo, seed, upgradeDemo } from "@/lib/demo";
 import type { Command, Snapshot } from "@/lib/domain";
 const KEY = "agrocontrol:demo:v1",
   MODE = "agrocontrol:demo-mode";
@@ -50,7 +50,7 @@ export function Provider({ children }: { children: ReactNode }) {
             !Array.isArray(parsed.partners)
           )
             throw new Error();
-          setData(parsed);
+          setData(upgradeDemo(parsed));
         } else setData(seed());
       }
     } catch {

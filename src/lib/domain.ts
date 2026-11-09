@@ -1,8 +1,15 @@
 import { z } from "zod";
 export const roles = ["admin", "bodega", "ventas", "lectura"] as const;
 export type Role = (typeof roles)[number];
-export const units = ["saco", "kg", "litro", "unidad"] as const;
-export const defaultCategories = [
+export const units = [
+  "saco",
+  "kg",
+  "litro",
+  "unidad",
+  "quintal",
+  "libra",
+] as const;
+export const categories = [
   "Nitrogenado",
   "Fosfatado",
   "Potásico",
@@ -10,47 +17,6 @@ export const defaultCategories = [
   "Orgánico",
   "Otro",
 ] as const;
-export type CategoryName = (typeof defaultCategories)[number];
-
-export interface ProductCategory {
-  id: string;
-  name: string;
-  active: boolean;
-  created_at: string;
-}
-
-export function getCustomCategories(): ProductCategory[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem("agrocontrol:categories");
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter(
-      (c: ProductCategory) => c && typeof c.name === "string",
-    );
-  } catch {
-    return [];
-  }
-}
-
-export function saveCustomCategories(cats: ProductCategory[]): void {
-  if (typeof window === "undefined") return;
-  localStorage.setItem("agrocontrol:categories", JSON.stringify(cats));
-}
-
-export function allCategories(): string[] {
-  const custom = getCustomCategories().filter((c) => c.active);
-  return [...defaultCategories, ...custom.map((c) => c.name)];
-}
-
-export function categoryOptions(): { value: string; label: string }[] {
-  const custom = getCustomCategories().filter((c) => c.active);
-  return [
-    ...defaultCategories.map((v) => ({ value: v, label: v })),
-    ...custom.map((c) => ({ value: c.name, label: c.name })),
-  ];
-}
 const text = (n: number) =>
   z.string().trim().min(1, "Campo obligatorio").max(n);
 const qty = z
@@ -75,7 +41,7 @@ export const productInput = z.object({
     .regex(/^[A-Za-z0-9_-]+$/, "Solo letras, números, guion o guion bajo")
     .transform((s) => s.toUpperCase()),
   name: text(120),
-  category: z.string().min(1, "Categoría obligatoria"),
+  category: text(80),
   unit: z.enum(units),
   presentation: text(80),
   price: money,
@@ -92,11 +58,32 @@ export const productInput = z.object({
 export const partnerInput = z.object({
   id: z.uuid().optional(),
   name: text(120),
-  kind: z.enum(["cliente", "proveedor"]),
+  kind: z.enum(["cliente", "proveedor", "productor"]),
   document: z.string().trim().max(40),
   email: z.union([z.email(), z.literal("")]),
   phone: z.string().trim().max(30),
   active: z.boolean(),
+});
+export const categoryInput = z.object({
+  id: z.uuid().optional(),
+  name: text(80),
+  active: z.boolean(),
+});
+export const profileInput = z.object({
+  full_name: text(100),
+  phone: z.string().trim().max(30),
+});
+export const farmInput = z.object({
+  farm_name: text(100),
+  location: z.string().trim().max(150),
+});
+export const paymentInput = z.object({
+  partner_id: z.uuid(),
+  amount: money.refine((n) => n > 0, "El importe debe ser mayor que cero"),
+  paid_on: z.iso.date(),
+  method: z.enum(["efectivo", "transferencia", "cheque"]),
+  reference: text(80),
+  reason: text(250),
 });
 export const commandSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("product"), data: productInput }),
@@ -109,7 +96,7 @@ export const commandSchema = z.discriminatedUnion("type", [
     quantity: qty,
     reason: text(250),
     partner_id: z.union([z.uuid(), z.literal("")]),
-    unit_cost: z.number().min(0).max(1000000).optional(),
+    unit_cost: money.optional(),
   }),
   z.object({
     type: z.literal("sale"),
@@ -126,6 +113,19 @@ export const commandSchema = z.discriminatedUnion("type", [
       ),
   }),
   z.object({ type: z.literal("cancel"), sale_id: z.uuid(), reason: text(250) }),
+  z.object({ type: z.literal("category"), data: categoryInput }),
+  z.object({ type: z.literal("profile"), data: profileInput }),
+  z.object({ type: z.literal("farm"), data: farmInput }),
+  z.object({
+    type: z.literal("payment"),
+    request_id: z.uuid(),
+    data: paymentInput,
+  }),
+  z.object({
+    type: z.literal("cancel_payment"),
+    payment_id: z.uuid(),
+    reason: text(250),
+  }),
 ]);
 export type Command = z.infer<typeof commandSchema>;
 export type Product = z.infer<typeof productInput> & {
@@ -170,22 +170,55 @@ export type Sale = {
   request_id: string;
   items: SaleItem[];
 };
+export type Category = z.infer<typeof categoryInput> & { id: string };
+export type Payment = z.infer<typeof paymentInput> & {
+  id: string;
+  partner_name: string;
+  status: "vigente" | "anulado";
+  actor: string;
+  created_at: string;
+  request_id: string;
+  cancel_reason: string | null;
+  cancelled_by: string | null;
+  cancelled_at: string | null;
+};
 export type Snapshot = {
+  categories: Category[];
+  payments: Payment[];
+  profile: z.infer<typeof profileInput>;
+  farm: z.infer<typeof farmInput>;
   products: Product[];
   partners: Partner[];
   movements: Movement[];
   sales: Sale[];
   role: Role;
   email: string;
-  metrics: { month_sales: number; month_count: number };
+  metrics: {
+    month_sales: number;
+    month_count: number;
+    month_payments?: number;
+    payment_count?: number;
+    month_purchase_total?: number;
+    month_purchase_count?: number;
+  };
   history_limited: boolean;
 };
-export const can = (role: Role, action: Command["type"]) =>
-  action === "product"
-    ? role === "admin"
-    : action === "movement"
-      ? ["admin", "bodega"].includes(role)
-      : ["admin", "ventas"].includes(role);
+export const can = (role: Role, action: Command["type"]) => {
+  if (action === "profile") return true;
+  if (["product", "category", "farm"].includes(action)) return role === "admin";
+  if (action === "movement") return ["admin", "bodega"].includes(role);
+  return ["admin", "ventas"].includes(role);
+};
+// Mantener los campos como texto evita que borrar el valor lo convierta de nuevo en cero.
+export function numericDraft(value: string) {
+  return value.replace(/^0+(?=\d)/, "");
+}
+export function requiredNumber(value: string, label = "Valor") {
+  if (!value.trim()) throw new Error(`${label} es obligatorio.`);
+  const n = Number(value);
+  if (!Number.isFinite(n)) throw new Error(`${label} no es válido.`);
+  return n;
+}
 export const roundQty = (n: number) => Math.round(n * 1000) / 1000;
 export const lineTotal = (quantity: number, price: number) =>
   Math.round((quantity * price + Number.EPSILON) * 100) / 100;

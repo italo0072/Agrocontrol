@@ -5,6 +5,7 @@ import {
   roundQty,
   type Command,
   type Snapshot,
+  categories as initialCategories,
 } from "./domain";
 const id = (n: number) =>
   `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
@@ -12,6 +13,17 @@ export function seed(): Snapshot {
   const now = new Date().toISOString();
   return {
     role: "admin",
+    categories: [
+      ...initialCategories,
+      "Café",
+      "Fertilizantes",
+      "Agroquímicos",
+      "Herramientas",
+      "Materiales",
+    ].map((name, n) => ({ id: id(100 + n), name, active: true })),
+    payments: [],
+    profile: { full_name: "Administrador de finca", phone: "" },
+    farm: { farm_name: "Finca El Porvenir", location: "El Salvador" },
     email: "demo@agrocontrol.local",
     history_limited: false,
     metrics: { month_sales: 0, month_count: 0 },
@@ -55,6 +67,19 @@ export function seed(): Snapshot {
         stock: 260,
         created_at: now,
       },
+      {
+        id: id(4),
+        sku: "CAF-001",
+        name: "Café pergamino",
+        category: "Café",
+        unit: "quintal",
+        presentation: "Pergamino seco · quintal",
+        price: 180,
+        min_stock: 10,
+        active: true,
+        stock: 80,
+        created_at: now,
+      },
     ],
     partners: [
       {
@@ -77,11 +102,21 @@ export function seed(): Snapshot {
         active: true,
         created_at: now,
       },
+      {
+        id: id(12),
+        name: "Productor Las Brisas",
+        kind: "productor",
+        document: "PRODUCTOR-DEMO",
+        email: "",
+        phone: "",
+        active: true,
+        created_at: now,
+      },
     ],
-    movements: [1, 2, 3].map((n) => ({
+    movements: [1, 2, 3, 4].map((n) => ({
       id: id(20 + n),
       product_id: id(n),
-      quantity: [120, 12, 260][n - 1],
+      quantity: [120, 12, 260, 80][n - 1],
       kind: "entrada",
       reason: "Saldo inicial de demostración",
       actor: "Demo",
@@ -131,6 +166,13 @@ export function applyDemo(previous: Snapshot, input: Command): Snapshot {
     });
   if (command.type === "product") {
     const d = command.data;
+    const category = s.categories.find((c) => c.name === d.category);
+    if (
+      !category ||
+      (!category.active &&
+        !s.products.some((p) => p.id === d.id && p.category === d.category))
+    )
+      throw new Error("Selecciona una categoría activa.");
     if (s.products.some((x) => x.sku === d.sku && x.id !== d.id))
       throw new Error("El código ya existe.");
     const old = s.products.find((x) => x.id === d.id);
@@ -168,7 +210,9 @@ export function applyDemo(previous: Snapshot, input: Command): Snapshot {
       command.partner_id &&
       !s.partners.some(
         (x) =>
-          x.id === command.partner_id && x.kind === "proveedor" && x.active,
+          x.id === command.partner_id &&
+          ["proveedor", "productor"].includes(x.kind) &&
+          x.active,
       )
     )
       throw new Error("Proveedor inválido.");
@@ -234,6 +278,65 @@ export function applyDemo(previous: Snapshot, input: Command): Snapshot {
     sale.status = "anulada";
     sale.cancel_reason = command.reason;
   }
+
+  if (command.type === "category") {
+    const d = command.data,
+      name = d.name.trim();
+    if (
+      s.categories.some(
+        (c) =>
+          c.id !== d.id &&
+          c.name.toLocaleLowerCase() === name.toLocaleLowerCase(),
+      )
+    )
+      throw new Error("Ya existe una categoría con ese nombre.");
+    const old = s.categories.find((c) => c.id === d.id);
+    if (d.id && !old) throw new Error("Categoría inexistente.");
+    if (old) {
+      for (const p of s.products)
+        if (p.category === old.name) p.category = name;
+      Object.assign(old, { ...d, name });
+    } else s.categories.push({ ...d, name, id: crypto.randomUUID() });
+  }
+  if (command.type === "profile") s.profile = command.data;
+  if (command.type === "farm") s.farm = command.data;
+  if (command.type === "payment") {
+    if (s.payments.some((p) => p.request_id === command.request_id))
+      return previous;
+    const d = command.data,
+      contact = s.partners.find((c) => c.id === d.partner_id && c.active);
+    if (!contact) throw new Error("Selecciona un contacto activo.");
+    const today = new Intl.DateTimeFormat("en-CA", {
+      timeZone: "America/El_Salvador",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(new Date());
+    if (d.paid_on > today)
+      throw new Error("La fecha de pago no puede estar en el futuro.");
+    s.payments.unshift({
+      ...d,
+      id: crypto.randomUUID(),
+      partner_name: contact.name,
+      status: "vigente",
+      actor: s.profile.full_name || "Demo",
+      created_at: now,
+      request_id: command.request_id,
+      cancel_reason: null,
+      cancelled_by: null,
+      cancelled_at: null,
+    });
+  }
+  if (command.type === "cancel_payment") {
+    const payment = s.payments.find((p) => p.id === command.payment_id);
+    if (!payment) throw new Error("Pago inexistente.");
+    if (payment.status === "anulado")
+      throw new Error("El pago ya está anulado.");
+    payment.status = "anulado";
+    payment.cancel_reason = command.reason;
+    payment.cancelled_by = s.profile.full_name || "Demo";
+    payment.cancelled_at = now;
+  }
   const month = new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/El_Salvador",
     year: "numeric",
@@ -252,5 +355,59 @@ export function applyDemo(previous: Snapshot, input: Command): Snapshot {
     month_sales: current.reduce((sum, x) => sum + x.total, 0),
     month_count: current.length,
   };
+  const currentDate = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/El_Salvador",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  })
+    .format(new Date())
+    .slice(0, 7);
+  const currentPayments = s.payments.filter(
+    (p) => p.status === "vigente" && p.paid_on.startsWith(currentDate),
+  );
+  s.metrics.month_payments = currentPayments.reduce(
+    (sum, p) => sum + p.amount,
+    0,
+  );
+  s.metrics.payment_count = currentPayments.length;
+  const purchases = s.movements.filter(
+    (m) =>
+      m.kind === "entrada" &&
+      m.unit_cost != null &&
+      new Intl.DateTimeFormat("en-CA", {
+        timeZone: "America/El_Salvador",
+        year: "numeric",
+        month: "2-digit",
+      }).format(new Date(m.created_at)) === month,
+  );
+  s.metrics.month_purchase_total = purchases.reduce(
+    (sum, m) => sum + lineTotal(m.quantity, m.unit_cost || 0),
+    0,
+  );
+  s.metrics.month_purchase_count = purchases.length;
   return s;
+}
+
+// Agrega la estructura nueva a demos V1 sin borrar sus productos ni movimientos.
+export function upgradeDemo(old: Snapshot): Snapshot {
+  const defaults = seed();
+  const names = new Set([
+    ...(old.categories ?? defaults.categories).map((c) => c.name),
+    ...old.products.map((p) => p.category),
+  ]);
+  return {
+    ...old,
+    categories: Array.from(names).map(
+      (name) =>
+        old.categories?.find((c) => c.name === name) ?? {
+          id: crypto.randomUUID(),
+          name,
+          active: true,
+        },
+    ),
+    payments: old.payments ?? [],
+    profile: old.profile ?? defaults.profile,
+    farm: old.farm ?? defaults.farm,
+  };
 }

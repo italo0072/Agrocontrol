@@ -4,3 +4,7 @@ node_modules/
 !.env.example
 *.tsbuildinfo
 historial-desarrollo.bundle
+
+.saropa/
+playwright-report/
+test-results/

@@ -2,7 +2,9 @@
 export default function ErrorPage({ reset }: { reset: () => void }) {
   return (
     <section className="section-card" role="alert">
-      <h1 className="text-lg font-bold text-slate-100 mb-2">No pudimos mostrar este módulo</h1>
+      <h1 className="text-lg font-bold text-slate-100 mb-2">
+        No pudimos mostrar este módulo
+      </h1>
       <p className="text-sm text-slate-400 mb-4">
         Intenta otra vez. No se borrará la información guardada.
       </p>

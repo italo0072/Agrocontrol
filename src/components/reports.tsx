@@ -14,6 +14,7 @@ function localDay(d: string) {
   const v = (t: string) => parts.find((p) => p.type === t)?.value;
   return `${v("year")}-${v("month")}-${v("day")}`;
 }
+import { PurchaseSummary } from "./purchase-summary";
 export function Reports() {
   const { data } = useStore();
   const [from, setFrom] = useState(""),
@@ -27,21 +28,9 @@ export function Reports() {
     net = sales
       .filter((x) => x.status === "vigente")
       .reduce((sum, x) => sum + x.total, 0);
-  const purchaseMovements = data.movements.filter(
-    (x) => x.kind === "entrada" && x.unit_cost != null && x.unit_cost > 0,
+  const purchaseMovements = moves.filter(
+    (m) => m.kind === "entrada" && m.unit_cost != null,
   );
-  const purchaseSpend = purchaseMovements.reduce(
-    (sum, x) => sum + x.quantity * (x.unit_cost || 0),
-    0,
-  );
-  const purchaseQty = purchaseMovements.reduce(
-    (sum, x) => sum + x.quantity,
-    0,
-  );
-  const purchaseUnit = purchaseMovements.length > 0
-    ? data.products.find((p) => p.id === purchaseMovements[0].product_id)?.unit
-    : "";
-  const avgCost = purchaseQty > 0 ? purchaseSpend / purchaseQty : 0;
   function stockExport() {
     if (!data) return;
     download(
@@ -149,7 +138,7 @@ export function Reports() {
       </p>
       <div className="flex items-end gap-4 flex-wrap mb-7">
         <label className="flex-1 min-w-[200px] max-w-[440px] flex flex-col gap-2">
-          <span className="text-xs text-slate-500">Desde</span>
+          <span className="text-xs text-slate-400">Desde</span>
           <input
             type="date"
             className="input-pro"
@@ -158,7 +147,7 @@ export function Reports() {
           />
         </label>
         <label className="flex-1 min-w-[200px] max-w-[440px] flex flex-col gap-2">
-          <span className="text-xs text-slate-500">Hasta</span>
+          <span className="text-xs text-slate-400">Hasta</span>
           <input
             type="date"
             className="input-pro"
@@ -183,8 +172,10 @@ export function Reports() {
       )}
       <div className="grid gap-6 md:grid-cols-2">
         <section className="section-card p-6">
-          <h2 className="text-sm font-bold text-slate-100 mb-4">Existencias actuales</h2>
-          <p className="text-xs text-slate-500 mb-5">
+          <h2 className="text-sm font-bold text-slate-100 mb-4">
+            Existencias actuales
+          </h2>
+          <p className="text-xs text-slate-400 mb-5">
             Productos activos e inactivos, presentación, unidad, existencia y
             mínimo. No suma unidades incompatibles.
           </p>
@@ -197,11 +188,14 @@ export function Reports() {
           </button>
         </section>
         <section className="section-card p-6">
-          <h2 className="text-sm font-bold text-slate-100 mb-4">Ventas del período visible</h2>
-          <p className="text-xs text-slate-500 mb-5">
+          <h2 className="text-sm font-bold text-slate-100 mb-4">
+            Ventas del período visible
+          </h2>
+          <p className="text-xs text-slate-400 mb-5">
             {sales.length} registros · Importe vigente:
             <br />
-            <strong className="text-emerald-400">{money(net)}</strong>. Las anuladas no se suman.
+            <strong className="text-emerald-400">{money(net)}</strong>. Las
+            anuladas no se suman.
           </p>
           <button
             className="inline-flex items-center gap-2 px-5 py-3 rounded-lg border border-white/10 bg-white/5 text-slate-400 font-bold transition-all duration-200 hover:border-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -213,8 +207,10 @@ export function Reports() {
           </button>
         </section>
         <section className="section-card p-6">
-          <h2 className="text-sm font-bold text-slate-100 mb-4">Movimientos del período visible</h2>
-          <p className="text-xs text-slate-500 mb-5">
+          <h2 className="text-sm font-bold text-slate-100 mb-4">
+            Movimientos del período visible
+          </h2>
+          <p className="text-xs text-slate-400 mb-5">
             {moves.length} movimientos con fecha, unidad, motivo, responsable y
             referencia de venta.
           </p>
@@ -228,12 +224,14 @@ export function Reports() {
           </button>
         </section>
         <section className="section-card p-6">
-          <h2 className="text-sm font-bold text-slate-100 mb-4">Reglas del reporte</h2>
-          <p className="text-xs text-slate-500 mb-3">
+          <h2 className="text-sm font-bold text-slate-100 mb-4">
+            Reglas del reporte
+          </h2>
+          <p className="text-xs text-slate-400 mb-3">
             Moneda USD. Fechas de El Salvador. Valor comercial = stock × precio
             de venta; no representa costo contable ni utilidad.
           </p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-400">
             Los CSV son exportaciones de consulta, no respaldos completos de la
             base de datos.
           </p>
@@ -243,53 +241,44 @@ export function Reports() {
           <h2 className="text-sm font-bold text-slate-100 mb-4">
             Compras y reabastecimiento
           </h2>
-          <p className="text-xs text-slate-500 mb-4">
+          <p className="text-xs text-slate-400 mb-4">
             Gasto total en entradas de inventario con costo registrado y precio
             promedio ponderado por unidad.
           </p>
-          <div className="grid grid-cols-3 gap-4 mb-6">
-            <div className="p-4 rounded-xl border border-slate-700 bg-slate-800/40">
-              <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">
-                Gasto total en compras
-              </div>
-              <div className="text-2xl font-bold text-emerald-400">
-                {money(purchaseSpend)}
-              </div>
-            </div>
-            <div className="p-4 rounded-xl border border-slate-700 bg-slate-800/40">
-              <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">
-                Unidades compradas
-              </div>
-              <div className="text-2xl font-bold text-slate-100">
-                {purchaseQty} {purchaseUnit}
-              </div>
-            </div>
-            <div className="p-4 rounded-xl border border-slate-700 bg-slate-800/40">
-              <div className="text-xs text-slate-500 uppercase font-bold tracking-wider mb-1">
-                Costo promedio por unidad
-              </div>
-              <div className="text-2xl font-bold text-amber-400">
-                {money(avgCost)}
-              </div>
-            </div>
-          </div>
+          <PurchaseSummary moves={moves} products={data.products} />
           <div className="overflow-x-auto">
             <table className="min-w-full border-collapse">
               <thead>
                 <tr>
-                  <th className="table-header-cell px-5 py-4 text-left">Fecha</th>
-                  <th className="table-header-cell px-5 py-4 text-left">Producto</th>
-                  <th className="table-header-cell px-5 py-4 text-left">Cantidad</th>
-                  <th className="table-header-cell px-5 py-4 text-left">Costo unitario</th>
-                  <th className="table-header-cell px-5 py-4 text-left">Importe</th>
-                  <th className="table-header-cell px-5 py-4 text-left">Proveedor</th>
-                  <th className="table-header-cell px-5 py-4 text-left">Motivo</th>
+                  <th className="table-header-cell px-5 py-4 text-left">
+                    Fecha
+                  </th>
+                  <th className="table-header-cell px-5 py-4 text-left">
+                    Producto
+                  </th>
+                  <th className="table-header-cell px-5 py-4 text-left">
+                    Cantidad
+                  </th>
+                  <th className="table-header-cell px-5 py-4 text-left">
+                    Costo unitario
+                  </th>
+                  <th className="table-header-cell px-5 py-4 text-left">
+                    Importe
+                  </th>
+                  <th className="table-header-cell px-5 py-4 text-left">
+                    Proveedor
+                  </th>
+                  <th className="table-header-cell px-5 py-4 text-left">
+                    Motivo
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {purchaseMovements.map((m) => {
                   const p = data.products.find((x) => x.id === m.product_id);
-                  const partner = data.partners.find((x) => x.id === m.partner_id);
+                  const partner = data.partners.find(
+                    (x) => x.id === m.partner_id,
+                  );
                   return (
                     <tr key={m.id} className="table-row">
                       <td className="px-5 py-4 border-b border-slate-700 text-base text-slate-100">
@@ -298,7 +287,9 @@ export function Reports() {
                       <td className="px-5 py-4 border-b border-slate-700 font-bold text-slate-100 text-base">
                         {p?.name}
                         <br />
-                        <small className="text-slate-500 text-xs">{p?.sku}</small>
+                        <small className="text-slate-400 text-xs">
+                          {p?.sku}
+                        </small>
                       </td>
                       <td className="px-5 py-4 border-b border-slate-700 text-base text-slate-100">
                         {m.quantity} {p?.unit}
@@ -307,9 +298,7 @@ export function Reports() {
                         {m.unit_cost ? money(m.unit_cost) : "—"}
                       </td>
                       <td className="px-5 py-4 border-b border-slate-700 text-base text-slate-100">
-                        {m.unit_cost
-                          ? money(m.quantity * m.unit_cost)
-                          : "—"}
+                        {m.unit_cost ? money(m.quantity * m.unit_cost) : "—"}
                       </td>
                       <td className="px-5 py-4 border-b border-slate-700 text-base text-slate-100">
                         {partner?.name || "—"}

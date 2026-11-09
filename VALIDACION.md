@@ -1,23 +1,24 @@
-# Verificación de AgroControl
+# Verificación de la entrega corregida
 
-Entorno: Node.js 24.22.1, Next.js 16.4.5. Proyecto sin credenciales de Supabase del usuario.
+Entorno: Node.js 24.22.1 y Next.js 16.4.5. No se utilizó ni se modificó la base remota del usuario.
 
-| Verificación ejecutada         | Resultado                                                        |
-| ------------------------------ | ---------------------------------------------------------------- |
-| `npm test`                     | 19 pruebas/subpruebas aprobadas; 0 fallidas                      |
-| `npm run typecheck`            | Aprobado                                                         |
-| `npm run build`                | Aprobado; páginas App Router y dos Route Handlers generados      |
-| Migración PostgreSQL en PGlite | Ejecutada correctamente                                          |
-| Lectura con RLS                | Anónimo sin permisos y usuario sin perfil sin filas              |
-| Roles de operación             | Lectura sin escrituras, bodega sin ventas, ventas sin catálogo   |
-| Protección de stock            | Sobreventa rechazada con rollback                                |
-| Reintentos                     | Entradas y ventas no se duplican con el mismo request_id         |
-| Anulación                      | Compensación una sola vez y conservación del historial           |
-| Integridad                     | Código duplicado y cambio de unidad con movimientos rechazados   |
-| API                            | Errores controlados 401, 413 y 503 sin exponer detalles internos |
+| Comprobación                                         | Resultado                                                                |
+| ---------------------------------------------------- | ------------------------------------------------------------------------ |
+| `npm test`                                           | 35 pruebas/subpruebas aprobadas, 0 fallidas                              |
+| `npm run typecheck`                                  | Aprobado                                                                 |
+| `npm run build`                                      | Aprobado: App Router, Tailwind y dos Route Handlers                      |
+| Migración incremental 004 sobre registros anteriores | Conserva productos, movimientos y stock                                  |
+| Repetir migración 004                                | Aprobado sin duplicar categorías ni perder datos                         |
+| Categorías                                           | Altas, renombre con productos, desactivación y duplicados verificados    |
+| Perfil y permisos                                    | Solo campos propios; no permite elevar rol ni llamar función interna     |
+| Costos de recepción                                  | Se conservan en PostgreSQL; se rechaza precisión superior a centavos     |
+| Métrica mensual de compras                           | Consulta completa SQL y suma comprobada                                  |
+| Resumen por producto/unidad                          | No mezcla sacos con kg; incluye costo cero y excluye costo ausente       |
+| Inventario, ventas y pagos                           | Reglas de stock, permisos, idempotencia y anulaciones verificadas        |
+| ZIP                                                  | Sin node_modules, .next, .env.local, diagnósticos ni archivos temporales |
 
-PGlite ejecuta PostgreSQL embebido: valida PL/pgSQL, políticas y transacciones sin conectarse a una base del usuario. No prueba Supabase Auth real, correo, infraestructura de Vercel ni competencia entre conexiones independientes.
+Las pruebas de PostgreSQL utilizan PGlite. No se conectan al Supabase del usuario y no sustituyen la comprobación de Auth, correo y permisos del proyecto real. No se realizó una sesión visual interactiva en navegador ni una prueba de concurrencia entre conexiones independientes.
 
-No se ejecutó una sesión visual interactiva en navegador ni un despliegue público. Tampoco se cargaron hojas de cálculo reales ni se verificaron los procesos de una empresa concreta. Las comprobaciones pendientes se encuentran en docs/PRUEBAS_MANUALES.md.
+Responsive se implementó con navegación móvil, formularios de una columna y grids por breakpoint. Queda pendiente comprobar visualmente en los navegadores y dispositivos del estudiante los casos de docs/PRUEBAS_MANUALES.md.
 
-Para entregar la tarea: configurar Supabase, probar la UI en móvil/escritorio y el flujo autenticado, publicar GitHub/Vercel, agregar URLs al README y registrar las revisiones del estudiante en VIBE_CODING.md.
+Para completar todos los entregables todavía hay que configurar/probar Supabase real, publicar GitHub y Vercel, verificar la URL pública y añadir los enlaces y las revisiones del estudiante al README/VIBE_CODING.md. No se afirma que esas publicaciones ya existan.

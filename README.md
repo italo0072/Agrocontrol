@@ -1,17 +1,25 @@
 # AgroControl
 
-Aplicación web para estandarizar el catálogo, inventario y ventas de una empresa distribuidora de fertilizantes. Proyecto académico funcional con Next.js 16.4.5, App Router, TypeScript, React, CSS Modules y Supabase (Auth + PostgreSQL).
+Aplicación web para estandarizar productos, recepciones, inventario, ventas y registros de pagos de una finca cafetalera. Proyecto académico funcional con Next.js 16.4.5, App Router, TypeScript, React, Tailwind CSS y Supabase (Auth + PostgreSQL).
 
 **Repositorio público:** pendiente de crear desde tu cuenta.
 
 **Aplicación en producción:** pendiente de desplegar y agregar la URL real.
+
+## Actualizar desde tu versión adjunta
+
+Lee primero [ACTUALIZAR.md](ACTUALIZAR.md). **Si ya creaste la base de datos, ejecuta solamente `supabase/004_reparacion_tailwind.sql`, una vez. No vuelvas a ejecutar `001_schema.sql`.** Conserva tu `.env.local` y el historial Git de tu repositorio.
+
+Esta actualización corrige los números que volvían a cero, agrega Configuración (categorías, perfil, contraseña y finca), productores, unidades de café y registros de pagos. Incluye un diseño renovado con la misma estructura de navegación y módulos.
 
 ## Qué incluye
 
 - Inicio de sesión por correo y contraseña y recuperación de contraseña.
 - Perfiles de administrador, ventas, bodega y lectura, controlados en la base de datos.
 - Productos con código único, categoría, presentación, unidad, precio, mínimo y estado activo/inactivo.
-- Clientes y proveedores con edición y desactivación.
+- Clientes, proveedores y productores con edición y desactivación.
+- Configuración: categorías dinámicas, nombre/teléfono del usuario, cambio de contraseña y datos de la finca.
+- Registro de pagos realizados a contactos, con referencia, concepto, responsable, fecha y anulación auditada.
 - Entradas y salidas de inventario con cantidad, motivo, proveedor opcional y responsable.
 - Ventas con varios productos, total calculado por el servidor y descuento de stock en una sola transacción.
 - Anulación con motivo, devolución de stock y conservación del historial.
@@ -39,7 +47,7 @@ En Linux/macOS sustituye `Copy-Item` por `cp`. Si PowerShell bloquea `npm.ps1`, 
 
 ## 2. Datos reales compartidos
 
-Sigue [docs/CONFIGURAR_SUPABASE.md](docs/CONFIGURAR_SUPABASE.md). Debes crear un proyecto Supabase, ejecutar la migración incluida, crear tus usuarios y asignarles un rol. Después configura `.env.local`, reinicia el servidor y sal de la demo para iniciar sesión.
+Sigue [docs/CONFIGURAR_SUPABASE.md](docs/CONFIGURAR_SUPABASE.md). Debes crear un proyecto Supabase, ejecutar las migraciones incluidas en orden (`001_schema.sql` y `004_reparacion_tailwind.sql`), crear tus usuarios y asignarles un rol. Después configura `.env.local`, reinicia el servidor y sal de la demo para iniciar sesión.
 
 ```dotenv
 NEXT_PUBLIC_SUPABASE_URL=https://TU_PROYECTO.supabase.co
@@ -52,15 +60,16 @@ Una empresa por proyecto Supabase. Los usuarios autorizados de esa empresa compa
 
 ## 3. Flujo inicial recomendado
 
-1. Administración registra productos; cada presentación debe tener su código y unidad.
-2. Ventas o administración registra clientes y proveedores.
+1. Administración registra productos; las categorías se administran desde Configuración y cada presentación debe tener su código y unidad.
+2. Ventas o administración registra clientes, proveedores y productores.
 3. Bodega registra saldos iniciales como entradas con referencia y motivo.
 4. Ventas crea una venta seleccionando el cliente y los productos.
 5. El sistema descuenta stock y registra movimientos con responsable.
 6. Si hubo error, anula la venta e indica el motivo. No registres además una entrada manual por la misma anulación.
-7. Consulta indicadores y exporta CSV.
+7. Registra pagos que ya realizaste, indicando el beneficiario y el comprobante.
+8. Consulta indicadores y exporta CSV.
 
-La demostración permite este mismo recorrido, pero guarda datos ficticios localmente. Restablecer demo elimina únicamente esos datos locales. No hay importación automática de Excel ni traslado automático de la demo a Supabase.
+La demostración permite este mismo recorrido, pero guarda datos ficticios localmente. Restablecer demo elimina únicamente esos datos locales. Los pagos son registros manuales: no se ejecuta ninguna transferencia ni se generan saldos por pagar. No hay importación automática de Excel ni traslado automático de la demo a Supabase.
 
 ## 4. Arquitectura
 
@@ -68,7 +77,7 @@ La demostración permite este mismo recorrido, pero guarda datos ficticios local
 | ----------------- | --------------------------------------------------------------------- |
 | Páginas y layout  | Server Components de App Router                                       |
 | Interacción       | Client Components con `useState`, `useEffect`, contexto y formularios |
-| Estilos           | `ui.module.css` y resets globales                                     |
+| Estilos           | `globals.css`, `tailwind.config.js` y PostCSS                         |
 | API               | `GET /api/data` y `POST /api/commands` mediante fetch                 |
 | Validación        | Zod en Route Handler, restricciones y reglas en PostgreSQL            |
 | Identidad         | Supabase Auth; verificación `getUser` en el servidor                  |
@@ -91,7 +100,7 @@ Las páginas no exponen datos del negocio en HTML estático. El cliente solicita
 
 ### Rutas
 
-`/`, `/productos`, `/inventario`, `/contactos`, `/ventas`, `/reportes`, `/guia`, `/recuperar`, además de dos rutas API. La pantalla de acceso se muestra cuando no hay sesión ni demo. La protección efectiva de datos y operaciones está en la API y PostgreSQL, no solo en ocultar botones.
+`/`, `/productos`, `/inventario`, `/contactos`, `/ventas`, `/reportes`, `/pagos`, `/settings`, `/guia`, `/recuperar`, además de dos rutas API. La pantalla de acceso se muestra cuando no hay sesión ni demo. La protección efectiva de datos y operaciones está en la API y PostgreSQL, no solo en ocultar botones.
 
 ### Reglas de inventario
 
@@ -153,7 +162,7 @@ El bundle no incluye dependencias: en un clon nuevo ejecuta `npm ci` y copia `.e
 
 ## 7. Desplegar en Vercel
 
-1. Configura y prueba Supabase localmente siguiendo la guía.
+1. Configura y prueba Supabase localmente siguiendo la guía y ejecuta la migración V2 si usabas la versión adjunta.
 2. Sube el código a tu GitHub público.
 3. En https://vercel.com inicia sesión con GitHub e importa el repositorio.
 4. Framework: Next.js. Root Directory: donde está `package.json`. Build: `npm run build`. Node.js: 24.x. No uses exportación estática: necesitas Route Handlers.
@@ -166,14 +175,14 @@ No se ha creado ni publicado un repositorio en tu cuenta. No se inventa una URL 
 
 ## 8. Alcance y límites
 
-- Es una aplicación académica para una distribuidora comercial. No incluye producción, recetas de mezcla, lotes, vencimientos, varias bodegas, compras con cuentas por pagar, facturación fiscal ni contabilidad.
+- Es una aplicación académica para una finca cafetalera con recepción de café e insumos y operaciones comerciales. No incluye producción, recetas de mezcla, lotes, vencimientos, varias bodegas, cuentas por pagar automáticas, facturación fiscal ni contabilidad.
 - Moneda USD. Fechas mostradas en America/El_Salvador. Cantidades hasta 3 decimales; precios hasta 2. No hay impuestos ni descuentos.
 - El precio se expresa por la unidad de inventario. “Saco de 50 kg” se cuenta en sacos: no se convierte automáticamente a kg.
 - El valor comercial es stock × precio de venta; no es costo contable ni utilidad.
-- La UI carga hasta 200 movimientos y 200 ventas recientes. Los reportes y el gráfico usan ese conjunto; el total mensual consulta todo el historial en SQL. Los CSV no son un respaldo integral.
-- El catálogo admite menos de 1,000 productos y menos de 1,000 contactos en esta versión. Si alcanza ese límite, se muestra un error explícito y debe ampliarse la paginación.
+- La UI carga hasta 200 movimientos, 200 ventas y 200 pagos recientes. Los reportes y el gráfico usan ese conjunto; el total mensual consulta todo el historial en SQL. Los CSV no son un respaldo integral.
+- El catálogo admite menos de 1,000 productos y menos de 1,000 contactos y menos de 1,000 categorías en esta versión. Si alcanza ese límite, se muestra un error explícito y debe ampliarse la paginación.
 - No hay actualización en tiempo real. Usa Actualizar para traer cambios de otros usuarios.
-- La demo se guarda en un solo navegador y no garantiza coordinación entre pestañas. No uses datos reales en ella.
+- Los datos existentes de una demo V1 se amplían sin borrar sus registros; Restablecer demo sí los reemplaza con ejemplos nuevos de finca. La demo se guarda en un solo navegador y no garantiza coordinación entre pestañas. No uses datos reales en ella.
 - Sin las hojas reales de la empresa, no se ha realizado mapeo ni migración. `plantillas/catalogo_productos.csv` es una referencia de estandarización, no un archivo de importación implementada.
 - Antes de usarla en operación real deben validarse los procesos, respaldos, necesidades de trazabilidad y la integración en el proyecto Supabase de la empresa.
 
@@ -199,3 +208,11 @@ No se ha creado ni publicado un repositorio en tu cuenta. No se inventa una URL 
 - `VALIDACION.md`: verificaciones ejecutadas y pendientes.
 
 Fuentes técnicas: https://nextjs.org/docs/app · https://supabase.com/docs/guides/database/postgres/row-level-security · https://supabase.com/docs/reference/javascript/auth-getuser · https://vercel.com/docs/frameworks/full-stack/nextjs
+
+## Reparaciones específicas de tu ZIP
+
+Se conserva el costo unitario de compras y tu diseño Tailwind. La migración 004 añade/valida `unit_cost` sin recrear la base. La API valida centavos y PostgreSQL vuelve a validarlos. Se reemplazaron los totales de unidades incompatibles por grupos por producto/unidad; el importe monetario puede consolidarse. Los resúmenes de reportes respetan el rango seleccionado.
+
+El ZIP excluye node_modules, .next, archivos locales de entorno y diagnósticos. Incluye código, lockfile, documentación, pruebas y un historial Git recuperable mediante bundle.
+
+La cuenta de Supabase y las publicaciones GitHub/Vercel requieren tus acciones. No se afirma que exista un repositorio público ni una URL de producción antes de completar los pasos y reemplazar los enlaces pendientes.

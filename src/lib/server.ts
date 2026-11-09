@@ -25,9 +25,14 @@ export async function authenticate(request: Request) {
     throw new ApiError("Sesión inválida o vencida.", 401);
   const { data: profile, error: profileError } = await db
     .from("profiles")
-    .select("role,email")
+    .select("role,email,full_name,phone")
     .eq("id", data.user.id)
     .single();
+  if (profileError?.code === "42703")
+    throw new ApiError(
+      "Actualiza la base de datos ejecutando supabase/004_reparacion_tailwind.sql.",
+      503,
+    );
   if (profileError || !profile)
     throw new ApiError(
       "Usuario sin acceso. Solicita al administrador que te asigne un rol.",

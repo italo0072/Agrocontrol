@@ -50,11 +50,7 @@ export function Notice({
   return message ? (
     <p
       role="status"
-      className={`notice-pro ${
-        success
-          ? "notice-success"
-          : "notice-error"
-      }`}
+      className={`notice-pro ${success ? "notice-success" : "notice-error"}`}
     >
       {message}
     </p>
@@ -72,11 +68,7 @@ export function Badge({
   return (
     <span
       className={`badge-pro ${
-        warn
-          ? "badge-warn"
-          : inactive
-            ? "badge-inactive"
-            : "badge-active"
+        warn ? "badge-warn" : inactive ? "badge-inactive" : "badge-active"
       }`}
     >
       {children}

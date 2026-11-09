@@ -76,3 +76,15 @@ Antes de entregar, ejecuta y revisa el proyecto, completa pruebas manuales, conf
 - Pruebas ejecutadas y resultados:
 - Commit:
 - URL pública verificada:
+
+## Iteración sobre el ZIP modificado por el estudiante
+
+Prompt real: “podrías arreglarlo para que cumpla con lo solicitado”, acompañado del enunciado de la actividad. La revisión anterior detectó categorías solo locales rechazadas por SQL, promedios de unidades incompatibles y falta de adaptación móvil.
+
+Se conservó el diseño del usuario con Tailwind y su costo unitario. Se registró esa versión en un commit separado, sin atribuir su diseño al asistente. Después se conectó Configuración con Supabase, se repararon los cálculos y filtros y se añadieron navegación móvil y formularios de una columna. Se recuperaron también las funciones de perfil, finca, productores y registro de pagos de la iteración previa.
+
+La migración 004 es incremental y repetible, verifica roles dentro de PostgreSQL y mantiene privada la función interna. Se probó sobre registros previos y con una segunda ejecución. Se añadieron pruebas de compras agrupadas, costos explícitos cero y precisión.
+
+Se identificó y corrigió un hook del panel que estaba después de un retorno condicional. Los indicadores mensuales se obtienen de SQL completo; los gráficos y resúmenes cargados conservan su límite explícito.
+
+No se probaron el correo ni Supabase real ni se publicaron cuentas del estudiante. Las verificaciones personales, los prompts reales de nuevas iteraciones y las URLs públicas deben completarse por el estudiante.

@@ -1,7 +1,7 @@
 {
   "name": "agrocontrol",
-  "version": "1.0.0",
-  "description": "Gestión de inventario y ventas para una distribuidora de fertilizantes",
+  "version": "2.1.0",
+  "description": "Gesti\u00f3n de finca cafetalera con Tailwind, inventario, costos, categor\u00edas y pagos",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

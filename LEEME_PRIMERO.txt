@@ -1,8 +1,13 @@
-AGROCONTROL · INVENTARIO Y VENTAS DE FERTILIZANTES
+AGROCONTROL · VERSIÓN TAILWIND CORREGIDA
 
+Si ya lo usabas: lee ACTUALIZAR.md y ejecuta solo
+supabase/004_reparacion_tailwind.sql en tu base existente.
+Conserva .env.local y tu historial Git.
+
+Para probar la demo:
 1. Instala Node.js 24 LTS desde https://nodejs.org
-2. Extrae TODO el ZIP y abre la carpeta agrocontrol en VS Code.
-3. Abre una terminal donde está package.json y ejecuta:
+2. Extrae el ZIP y abre agrocontrol en VS Code.
+3. En la carpeta donde está package.json:
 
    npm ci
    Copy-Item .env.example .env.local
@@ -10,11 +15,6 @@ AGROCONTROL · INVENTARIO Y VENTAS DE FERTILIZANTES
 
 4. Abre http://localhost:3000 y pulsa Abrir demostración.
 
-La demo funciona sin cuentas y usa datos ficticios en el navegador.
-Para datos compartidos: sigue docs/CONFIGURAR_SUPABASE.md.
-Para publicar: sigue README.md (GitHub y Vercel).
-Para detener el servidor: Ctrl+C.
-Si PowerShell bloquea npm.ps1, usa npm.cmd en lugar de npm.
-
-La entrega de la tarea aún necesita tu repositorio público, URL real de
-producción y las pruebas personales indicadas en docs/PRUEBAS_MANUALES.md.
+Para datos reales, completa .env.local según la guía de Supabase.
+README.md incluye los pasos para publicar GitHub y Vercel.
+La URL pública y el repositorio todavía deben publicarse con tus cuentas.

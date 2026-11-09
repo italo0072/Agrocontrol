@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react";
 import { Sprout, ArrowRight, ShieldCheck } from "lucide-react";
 import { browserDb, configured } from "@/lib/supabase";
 import { useStore } from "./provider";
+import { authMessage } from "@/lib/auth-errors";
 export function Auth() {
   const { enterDemo, error } = useStore();
   const [email, setEmail] = useState(""),
@@ -18,10 +19,9 @@ export function Auth() {
         email,
         password,
       });
-      if (error)
-        throw new Error("No se pudo iniciar sesión. Revisa tus credenciales.");
+      if (error) throw error;
     } catch (e) {
-      setMessage((e as Error).message);
+      setMessage(authMessage(e));
     } finally {
       setBusy(false);
     }
@@ -40,27 +40,29 @@ export function Auth() {
       setMessage(
         "Si el correo corresponde a una cuenta, recibirás las instrucciones de recuperación.",
       );
-    } catch {
-      setMessage(
-        "No se pudo solicitar la recuperación. Revisa la configuración de correo.",
-      );
+    } catch (e) {
+      setMessage(authMessage(e));
     } finally {
       setBusy(false);
     }
   }
   return (
-    <div className="flex min-h-screen bg-slate-900">
-      <section className="w-2/5 bg-slate-800/50 border-r border-slate-700 p-10 flex flex-col justify-center backdrop-blur-xl">
+    <div className="flex flex-col lg:flex-row min-h-screen bg-slate-900">
+      <section className="w-full lg:w-2/5 bg-slate-800/50 border-r border-slate-700 p-10 flex flex-col justify-center backdrop-blur-xl">
         <div className="flex items-center gap-3 mb-8">
           <Sprout size={32} className="text-emerald-400" />
-          <span className="text-2xl font-extrabold text-white tracking-tight">AgroControl</span>
+          <span className="text-2xl font-extrabold text-white tracking-tight">
+            AgroControl
+          </span>
         </div>
         <p className="text-xs tracking-[2.5px] text-emerald-400 font-bold uppercase mb-3">
           INFORMACIÓN CLARA. OPERACIÓN CONECTADA.
         </p>
         <h1 className="text-3xl tracking-tight text-white font-bold mb-6 leading-[1.05]">
-          Más control para<br />
-          hacer crecer<br />
+          Más control para
+          <br />
+          hacer crecer
+          <br />
           tu negocio.
         </h1>
         <p className="text-slate-400 text-lg max-w-[400px] leading-relaxed mb-8">
@@ -68,7 +70,9 @@ export function Auth() {
         </p>
         <div className="flex items-center gap-3 mt-auto">
           <ShieldCheck className="w-5 h-5 text-emerald-400" />
-          <span className="text-slate-400 text-base">Una fuente de información para todo tu equipo.</span>
+          <span className="text-slate-400 text-base">
+            Una fuente de información para todo tu equipo.
+          </span>
         </div>
       </section>
       <section className="flex-1 flex items-center justify-center bg-slate-900 p-8">
@@ -80,7 +84,7 @@ export function Auth() {
             Inicia sesión
           </h2>
           <form onSubmit={login} className="flex flex-col gap-5">
-            <label className="flex flex-col gap-2 text-sm font-bold text-slate-500">
+            <label className="flex flex-col gap-2 text-sm font-bold text-slate-400">
               Correo electrónico
               <input
                 type="email"
@@ -91,7 +95,7 @@ export function Auth() {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </label>
-            <label className="flex flex-col gap-2 text-sm font-bold text-slate-500">
+            <label className="flex flex-col gap-2 text-sm font-bold text-slate-400">
               Contraseña
               <input
                 type="password"
@@ -111,7 +115,7 @@ export function Auth() {
             </button>
             <button
               type="button"
-              className="bg-transparent text-slate-500 border-0 text-sm cursor-pointer hover:text-emerald-400 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+              className="bg-transparent text-slate-400 border-0 text-sm cursor-pointer hover:text-emerald-400 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={!configured || busy}
               onClick={() => void recover()}
             >
@@ -120,8 +124,8 @@ export function Auth() {
           </form>
           {!configured && (
             <p className="mt-5 notice-info text-sm">
-              Para usar datos compartidos, configura Supabase siguiendo el README.
-              Puedes explorar la demo ahora.
+              Para usar datos compartidos, configura Supabase siguiendo el
+              README. Puedes explorar la demo ahora.
             </p>
           )}
           {(message || error) && (
@@ -130,9 +134,16 @@ export function Auth() {
             </p>
           )}
           <div className="mt-7 border-t border-slate-700 pt-6">
-            <strong className="text-base text-white block">Explora antes de configurar</strong>
-            <p className="text-slate-500 text-sm mt-1">Prueba el sistema con datos ficticios, sin crear una cuenta.</p>
-            <button onClick={enterDemo} className="mt-4 inline-flex items-center gap-2 px-5 py-3 rounded-lg border border-slate-600 bg-slate-700 text-white font-bold text-sm hover:bg-slate-600 transition-colors">
+            <strong className="text-base text-white block">
+              Explora antes de configurar
+            </strong>
+            <p className="text-slate-400 text-sm mt-1">
+              Prueba el sistema con datos ficticios, sin crear una cuenta.
+            </p>
+            <button
+              onClick={enterDemo}
+              className="mt-4 inline-flex items-center gap-2 px-5 py-3 rounded-lg border border-slate-600 bg-slate-700 text-white font-bold text-sm hover:bg-slate-600 transition-colors"
+            >
               Abrir demostración →
             </button>
           </div>

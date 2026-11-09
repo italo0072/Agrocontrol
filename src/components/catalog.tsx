@@ -3,12 +3,11 @@ import { useState, type FormEvent } from "react";
 import { Plus } from "lucide-react";
 import { ZodError } from "zod";
 import {
-  defaultCategories,
-  allCategories,
-  categoryOptions,
   units,
   commandSchema,
   can,
+  numericDraft,
+  requiredNumber,
   type Product,
   type Partner,
 } from "@/lib/domain";
@@ -27,12 +26,12 @@ function ProductForm({
   initial?: Product;
   onClose: (saved?: boolean) => void;
 }) {
-  const { execute, busy } = useStore();
+  const { execute, busy, data } = useStore();
   const [form, setForm] = useState({
       id: initial?.id,
       sku: initial?.sku || "",
       name: initial?.name || "",
-      category: initial?.category || "Compuesto",
+      category: initial?.category || "",
       unit: initial?.unit || "saco",
       presentation: initial?.presentation || "",
       price: initial?.price?.toString() ?? "",
@@ -49,8 +48,8 @@ function ProductForm({
           type: "product",
           data: {
             ...form,
-            price: form.price ? Number(form.price) : 0,
-            min_stock: form.min_stock ? Number(form.min_stock) : 0,
+            price: requiredNumber(form.price, "Precio"),
+            min_stock: requiredNumber(form.min_stock, "Mínimo"),
           },
         }),
       );
@@ -68,8 +67,8 @@ function ProductForm({
         <span className="text-xs text-slate-400">* Campos obligatorios</span>
       </div>
       <form onSubmit={submit}>
-        <div className="grid grid-cols-2 gap-6">
-          <label className="flex flex-col gap-2 text-sm font-bold text-slate-500">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <label className="flex flex-col gap-2 text-sm font-bold text-slate-400">
             Código único *
             <input
               required
@@ -81,7 +80,7 @@ function ProductForm({
               onChange={(e) => setForm({ ...form, sku: e.target.value })}
             />
           </label>
-          <label className="flex flex-col gap-2 text-sm font-bold text-slate-500">
+          <label className="flex flex-col gap-2 text-sm font-bold text-slate-400">
             Nombre *
             <input
               required
@@ -91,7 +90,7 @@ function ProductForm({
               onChange={(e) => setForm({ ...form, name: e.target.value })}
             />
           </label>
-          <label className="flex flex-col gap-2 text-sm font-bold text-slate-500">
+          <label className="flex flex-col gap-2 text-sm font-bold text-slate-400">
             Categoría
             <select
               className="select-pro"
@@ -103,14 +102,18 @@ function ProductForm({
                 })
               }
             >
-              {categoryOptions().map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
+              <option value="">Selecciona…</option>
+              {data?.categories
+                .filter((c) => c.active || c.name === form.category)
+                .map((c) => (
+                  <option key={c.id} value={c.name}>
+                    {c.name}
+                    {!c.active ? " (inactiva)" : ""}
+                  </option>
+                ))}
             </select>
           </label>
-          <label className="flex flex-col gap-2 text-sm font-bold text-slate-500">
+          <label className="flex flex-col gap-2 text-sm font-bold text-slate-400">
             Unidad de inventario
             <select
               className="select-pro"
@@ -124,7 +127,7 @@ function ProductForm({
               ))}
             </select>
           </label>
-          <label className="flex flex-col gap-2 text-sm font-bold text-slate-500">
+          <label className="flex flex-col gap-2 text-sm font-bold text-slate-400">
             Presentación *
             <input
               required
@@ -133,10 +136,11 @@ function ProductForm({
               className="input-pro"
               value={form.presentation}
               onChange={(e) =>
-                setForm({ ...form, presentation: e.target.value })}
+                setForm({ ...form, presentation: e.target.value })
+              }
             />
           </label>
-          <label className="flex flex-col gap-2 text-sm font-bold text-slate-500">
+          <label className="flex flex-col gap-2 text-sm font-bold text-slate-400">
             Precio de venta por unidad (USD) *
             <input
               type="text"
@@ -148,11 +152,11 @@ function ProductForm({
               className="input-pro"
               value={form.price}
               onChange={(e) =>
-                setForm({ ...form, price: e.target.value.replace(/[^0-9.]/g, "") })
+                setForm({ ...form, price: numericDraft(e.target.value) })
               }
             />
           </label>
-          <label className="flex flex-col gap-2 text-sm font-bold text-slate-500">
+          <label className="flex flex-col gap-2 text-sm font-bold text-slate-400">
             Existencia mínima *
             <input
               type="text"
@@ -164,7 +168,7 @@ function ProductForm({
               className="input-pro"
               value={form.min_stock}
               onChange={(e) =>
-                setForm({ ...form, min_stock: e.target.value.replace(/[^0-9.]/g, "") })
+                setForm({ ...form, min_stock: numericDraft(e.target.value) })
               }
             />
           </label>
@@ -178,7 +182,7 @@ function ProductForm({
             <span className="text-slate-300 text-base">Producto activo</span>
           </label>
         </div>
-        <p className="text-xs text-slate-500 mt-2">
+        <p className="text-xs text-slate-400 mt-2">
           El stock se modifica desde Inventario o Ventas. La unidad queda
           protegida cuando existen movimientos.
         </p>
@@ -222,10 +226,13 @@ export function Products() {
         description="Un código, una presentación y una unidad para cada producto."
       >
         {can(data.role, "product") && (
-          <button className="btn-primary" onClick={() => {
-            setNotice("");
-            setEdit("new");
-          }}>
+          <button
+            className="btn-primary"
+            onClick={() => {
+              setNotice("");
+              setEdit("new");
+            }}
+          >
             <Plus size={18} className="mr-2" />
             Nuevo producto
           </button>
@@ -244,7 +251,7 @@ export function Products() {
       )}
       <div className="flex items-end gap-4 flex-wrap mb-7">
         <label className="flex-1 min-w-[200px] max-w-[440px] flex flex-col gap-2">
-          <span className="text-xs text-slate-500">Buscar producto</span>
+          <span className="text-xs text-slate-400">Buscar producto</span>
           <input
             className="input-pro"
             value={query}
@@ -253,20 +260,22 @@ export function Products() {
           />
         </label>
         <label className="flex-1 min-w-[200px] max-w-[440px] flex flex-col gap-2">
-          <span className="text-xs text-slate-500">Categoría</span>
+          <span className="text-xs text-slate-400">Categoría</span>
           <select
             className="select-pro"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
           >
             <option value="">Todas</option>
-            {categoryOptions().map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
+            {data.categories.map((c) => (
+              <option key={c.id} value={c.name}>
+                {c.name}
+              </option>
             ))}
           </select>
         </label>
         <label className="flex-1 min-w-[200px] max-w-[440px] flex flex-col gap-2">
-          <span className="text-xs text-slate-500">Visibilidad</span>
+          <span className="text-xs text-slate-400">Visibilidad</span>
           <select
             className="select-pro"
             value={state}
@@ -280,21 +289,39 @@ export function Products() {
       </div>
       <section className="section-card overflow-hidden">
         <div className="p-5 border-b border-slate-700 flex items-center justify-between gap-5">
-          <h2 className="text-xs font-bold text-slate-100 uppercase tracking-wider">Catálogo de productos</h2>
-          <span className="text-xs text-slate-500">{filtered.length} productos</span>
+          <h2 className="text-xs font-bold text-slate-100 uppercase tracking-wider">
+            Catálogo de productos
+          </h2>
+          <span className="text-xs text-slate-400">
+            {filtered.length} productos
+          </span>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-[800px] w-full border-collapse">
             <thead>
               <tr>
-                <th className="table-header-cell px-5 py-4 text-left">Código / Producto</th>
-                <th className="table-header-cell px-5 py-4 text-left">Categoría</th>
-                <th className="table-header-cell px-5 py-4 text-left">Presentación</th>
-                <th className="table-header-cell px-5 py-4 text-left">Precio</th>
-                <th className="table-header-cell px-5 py-4 text-left">Existencia</th>
-                <th className="table-header-cell px-5 py-4 text-left">Estado</th>
+                <th className="table-header-cell px-5 py-4 text-left">
+                  Código / Producto
+                </th>
+                <th className="table-header-cell px-5 py-4 text-left">
+                  Categoría
+                </th>
+                <th className="table-header-cell px-5 py-4 text-left">
+                  Presentación
+                </th>
+                <th className="table-header-cell px-5 py-4 text-left">
+                  Precio
+                </th>
+                <th className="table-header-cell px-5 py-4 text-left">
+                  Existencia
+                </th>
+                <th className="table-header-cell px-5 py-4 text-left">
+                  Estado
+                </th>
                 {can(data.role, "product") && (
-                  <th className="table-header-cell px-5 py-4 text-left">Acciones</th>
+                  <th className="table-header-cell px-5 py-4 text-left">
+                    Acciones
+                  </th>
                 )}
               </tr>
             </thead>
@@ -302,17 +329,27 @@ export function Products() {
               {filtered.map((p) => (
                 <tr key={p.id} className="table-row">
                   <td className="px-5 py-4 border-b border-slate-700 font-bold text-slate-100 text-base">
-                    <span className="text-xs text-slate-500 font-mono bg-slate-900/50 px-2.5 py-1 rounded border border-slate-700 inline-block">{p.sku}</span>
+                    <span className="text-xs text-slate-400 font-mono bg-slate-900/50 px-2.5 py-1 rounded border border-slate-700 inline-block">
+                      {p.sku}
+                    </span>
                     <div className="text-slate-100">{p.name}</div>
                   </td>
-                  <td className="px-5 py-4 border-b border-slate-700 text-base text-slate-100">{p.category}</td>
+                  <td className="px-5 py-4 border-b border-slate-700 text-base text-slate-100">
+                    {p.category}
+                  </td>
                   <td className="px-5 py-4 border-b border-slate-700 text-base text-slate-100">
                     {p.presentation}
                     <br />
-                    <small className="text-slate-500 text-xs">Unidad: {p.unit}</small>
+                    <small className="text-slate-400 text-xs">
+                      Unidad: {p.unit}
+                    </small>
                   </td>
-                  <td className="px-5 py-4 border-b border-slate-700 text-base text-slate-100">{money(p.price)}</td>
-                  <td className="px-5 py-4 border-b border-slate-700 text-base text-slate-100">{quantity(p.stock)} {p.unit}</td>
+                  <td className="px-5 py-4 border-b border-slate-700 text-base text-slate-100">
+                    {money(p.price)}
+                  </td>
+                  <td className="px-5 py-4 border-b border-slate-700 text-base text-slate-100">
+                    {quantity(p.stock)} {p.unit}
+                  </td>
                   <td className="px-5 py-4 border-b border-slate-700 text-base text-slate-100">
                     <Badge
                       inactive={!p.active}
@@ -386,8 +423,8 @@ function PartnerForm({
         {initial ? "Editar contacto" : "Nuevo contacto"}
       </h2>
       <form onSubmit={submit}>
-        <div className="grid grid-cols-2 gap-6">
-          <label className="flex flex-col gap-2 text-sm font-bold text-slate-500">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <label className="flex flex-col gap-2 text-sm font-bold text-slate-400">
             Nombre o razón social *
             <input
               required
@@ -397,7 +434,7 @@ function PartnerForm({
               onChange={(e) => setForm({ ...form, name: e.target.value })}
             />
           </label>
-          <label className="flex flex-col gap-2 text-sm font-bold text-slate-500">
+          <label className="flex flex-col gap-2 text-sm font-bold text-slate-400">
             Tipo
             <select
               disabled={Boolean(initial)}
@@ -409,9 +446,10 @@ function PartnerForm({
             >
               <option value="cliente">Cliente</option>
               <option value="proveedor">Proveedor</option>
+              <option value="productor">Productor</option>
             </select>
           </label>
-          <label className="flex flex-col gap-2 text-sm font-bold text-slate-500">
+          <label className="flex flex-col gap-2 text-sm font-bold text-slate-400">
             Documento / Identificador
             <input
               maxLength={40}
@@ -420,7 +458,7 @@ function PartnerForm({
               onChange={(e) => setForm({ ...form, document: e.target.value })}
             />
           </label>
-          <label className="flex flex-col gap-2 text-sm font-bold text-slate-500">
+          <label className="flex flex-col gap-2 text-sm font-bold text-slate-400">
             Correo
             <input
               type="email"
@@ -430,7 +468,7 @@ function PartnerForm({
               onChange={(e) => setForm({ ...form, email: e.target.value })}
             />
           </label>
-          <label className="flex flex-col gap-2 text-sm font-bold text-slate-500">
+          <label className="flex flex-col gap-2 text-sm font-bold text-slate-400">
             Teléfono
             <input
               maxLength={30}
@@ -501,7 +539,7 @@ export function Contacts() {
       )}
       <div className="flex items-end gap-4 flex-wrap mb-7">
         <label className="flex-1 min-w-[200px] max-w-[440px] flex flex-col gap-2">
-          <span className="text-xs text-slate-500">Buscar contacto</span>
+          <span className="text-xs text-slate-400">Buscar contacto</span>
           <input
             className="input-pro"
             value={query}
@@ -510,7 +548,7 @@ export function Contacts() {
           />
         </label>
         <label className="flex-1 min-w-[200px] max-w-[440px] flex flex-col gap-2">
-          <span className="text-xs text-slate-500">Tipo</span>
+          <span className="text-xs text-slate-400">Tipo</span>
           <select
             className="select-pro"
             value={kind}
@@ -519,36 +557,59 @@ export function Contacts() {
             <option value="">Todos</option>
             <option value="cliente">Clientes</option>
             <option value="proveedor">Proveedores</option>
+            <option value="productor">Productores</option>
           </select>
         </label>
       </div>
       <section className="section-card overflow-hidden">
         <div className="p-5 border-b border-slate-700 flex items-center justify-between gap-5">
-          <h2 className="text-xs font-bold text-slate-100 uppercase tracking-wider">Directorio comercial</h2>
-          <span className="text-xs text-slate-500">{filtered.length} contactos</span>
+          <h2 className="text-xs font-bold text-slate-100 uppercase tracking-wider">
+            Directorio comercial
+          </h2>
+          <span className="text-xs text-slate-400">
+            {filtered.length} contactos
+          </span>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-[800px] w-full border-collapse">
             <thead>
               <tr>
-                <th className="table-header-cell px-5 py-4 text-left">Nombre</th>
+                <th className="table-header-cell px-5 py-4 text-left">
+                  Nombre
+                </th>
                 <th className="table-header-cell px-5 py-4 text-left">Tipo</th>
-                <th className="table-header-cell px-5 py-4 text-left">Documento</th>
-                <th className="table-header-cell px-5 py-4 text-left">Contacto</th>
-                <th className="table-header-cell px-5 py-4 text-left">Estado</th>
-                {can(data.role, "partner") && <th className="table-header-cell px-5 py-4 text-left">Acciones</th>}
+                <th className="table-header-cell px-5 py-4 text-left">
+                  Documento
+                </th>
+                <th className="table-header-cell px-5 py-4 text-left">
+                  Contacto
+                </th>
+                <th className="table-header-cell px-5 py-4 text-left">
+                  Estado
+                </th>
+                {can(data.role, "partner") && (
+                  <th className="table-header-cell px-5 py-4 text-left">
+                    Acciones
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody>
               {filtered.map((p) => (
                 <tr key={p.id} className="table-row">
-                  <td className="px-5 py-4 border-b border-slate-700 font-bold text-slate-100 text-base">{p.name}</td>
-                  <td className="px-5 py-4 border-b border-slate-700 text-base text-slate-100">{p.kind}</td>
-                  <td className="px-5 py-4 border-b border-slate-700 text-base text-slate-100">{p.document || "—"}</td>
+                  <td className="px-5 py-4 border-b border-slate-700 font-bold text-slate-100 text-base">
+                    {p.name}
+                  </td>
+                  <td className="px-5 py-4 border-b border-slate-700 text-base text-slate-100">
+                    {p.kind}
+                  </td>
+                  <td className="px-5 py-4 border-b border-slate-700 text-base text-slate-100">
+                    {p.document || "—"}
+                  </td>
                   <td className="px-5 py-4 border-b border-slate-700 text-base text-slate-100">
                     {p.email || "—"}
                     <br />
-                    <small className="text-slate-500 text-xs">{p.phone}</small>
+                    <small className="text-slate-400 text-xs">{p.phone}</small>
                   </td>
                   <td className="px-5 py-4 border-b border-slate-700 text-base text-slate-100">
                     <Badge inactive={!p.active}>

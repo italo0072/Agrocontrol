@@ -28,3 +28,14 @@ Registra fecha, navegador, resultado y evidencia real. Estas pruebas no están m
 Para reintentos por red: si no recibiste confirmación, actualiza y consulta el historial antes de crear otra operación. Las solicitudes repetidas con el mismo request_id son idempotentes, pero abrir un formulario nuevo genera otro identificador.
 
 Para cambios al catálogo y operaciones hechas por otra persona, pulsa Actualizar; no hay sincronización en tiempo real en esta versión.
+
+## Casos V2 pendientes en navegador y Supabase real
+
+- Borrar valores numéricos hasta dejarlos vacíos; escribir 04 y comprobar 4. Guardar cero explícitamente en precio/mínimo sigue permitido.
+- Crear categoría, renombrarla con productos asociados y desactivarla sin perder asignaciones.
+- Editar el propio nombre/teléfono y comprobar que no se puede cambiar el rol.
+- Cambiar contraseña con una cuenta real y volver a ingresar.
+- Registrar recepción desde un productor en quintales, sin conversión automática de unidades.
+- Registrar pago, reintentar con la misma operación, filtrar, exportar y anular el registro una vez.
+- Probar usuario bodega/lectura contra pagos y Configuración administrativa.
+- Verificar contraste, menú, tablas y formularios en 375, 768 y 1366 px con el diseño nuevo.

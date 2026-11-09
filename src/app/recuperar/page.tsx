@@ -31,12 +31,14 @@ export default function Recover() {
   }
   return (
     <section className="section-card">
-      <h1 className="text-lg font-bold text-slate-100 mb-2">Actualizar contraseña</h1>
+      <h1 className="text-lg font-bold text-slate-100 mb-2">
+        Actualizar contraseña
+      </h1>
       <p className="text-sm text-slate-400 mb-4">
         Abre el enlace de recuperación enviado a tu correo antes de continuar.
       </p>
       <form onSubmit={submit} className="flex flex-col gap-5">
-        <label className="flex flex-col gap-2 text-sm font-bold text-slate-500">
+        <label className="flex flex-col gap-2 text-sm font-bold text-slate-400">
           Nueva contraseña (mínimo 12 caracteres)
           <input
             type="password"
@@ -48,7 +50,7 @@ export default function Recover() {
             onChange={(e) => setPassword(e.target.value)}
           />
         </label>
-        <label className="flex flex-col gap-2 text-sm font-bold text-slate-500">
+        <label className="flex flex-col gap-2 text-sm font-bold text-slate-400">
           Repite la contraseña
           <input
             type="password"
